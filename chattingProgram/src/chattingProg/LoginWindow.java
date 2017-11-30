@@ -52,7 +52,7 @@ public class LoginWindow extends JFrame implements ActionListener {
 		makeInfoPanel();
 		add(img_panel);
 		add(info_panel);
-		this.setSize(500, 550);
+		setSize(500, 550);
 		this.setResizable(false);
 		this.setTitle("WeChat");
 		// setBounds(300, 300, 250, 100);

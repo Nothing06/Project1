@@ -26,64 +26,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-/*
-class clientSender extends Thread {
-	public DataOutputStream out;
-
-	clientSender() {
-		try {
-			out = new DataOutputStream(mainMenu.socket.getOutputStream());
-		} catch (UnknownHostException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-	}
-	public void run() {
-		String message = null;
-		String type = null;
-
-		while (out != null) {
-			// send(message);
-		}
-	}
-}
-
-class clientReceiver extends Thread {
-
-	public DataInputStream in;
-	// DataOutputStream out;
-
-	clientReceiver() {
-		String serverIp = "192.168.0.6";
-		try {
-			in = new DataInputStream(mainMenu.socket.getInputStream());
-		} catch (UnknownHostException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-	}
-
-	public void receive(String message) {
-
-	}
-
-	public void run() {
-		String id = null;
-		String password = null;
-		String message = null;
-		String type = null;
-
-		while (in != null) {
-			receive(message);
-		}
-	}
-}*/
 
 class friendPanel extends JPanel implements ListSelectionListener, ActionListener {
 	JList friendlist;
@@ -102,7 +44,7 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 		model = new DefaultListModel();
 		networkLib.loadfriendlist(model,friend_cnt);
 		friendlist = new JList(model);
-		friendlist.setPreferredSize(new Dimension(500, 600));
+		friendlist.setPreferredSize(new Dimension(500, 550));
 		scroll.setViewportView(friendlist);
 		scroll.setBorder(border); // 경계 설정
 		scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER); // 가로바정책

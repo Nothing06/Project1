@@ -15,7 +15,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
 public  class NetworkLib {
-//
+
 	public static String serverIp = "10.0.30.38";
 	public Socket socket;
 	public DataOutputStream out;
