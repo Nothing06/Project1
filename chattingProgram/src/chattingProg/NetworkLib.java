@@ -85,8 +85,8 @@ public  class NetworkLib {
 			if (isvalid.equals("0")) {
 				// JOptionPane.showInputDialog(isvalid);
 				t = false;
-				in = null;
-				out = null;
+				in.close();
+				out.close();
 			} else if (isvalid.equals("1")) {
 				t = true;
 				// JOptionPane.showInputDialog(isvalid);
