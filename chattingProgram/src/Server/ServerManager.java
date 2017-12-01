@@ -18,8 +18,7 @@ public class ServerManager extends Thread{
 	DB_Person db_person;
 	String ID="";   String password=""; 
 	String name="";  String age=""; String tel="";
-	String workspace = "C:\\Users\\user\\git\\Project1\\chattingProgram"
-			+ "\\";
+	String workspace = "C:\\Users\\user\\git\\Project1\\chattingProgram\\";
 	personTableField passwordField = personTableField.valueOf("password");
 	ServerManager(Socket socket, DB_Person db_person)
 	{

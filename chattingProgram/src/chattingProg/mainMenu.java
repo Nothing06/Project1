@@ -4,6 +4,9 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -15,6 +18,7 @@ import java.util.ArrayList;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -27,12 +31,12 @@ import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-class friendPanel extends JPanel implements ListSelectionListener, ActionListener {
+class friendPanel extends JPanel implements ListSelectionListener, ActionListener{
 	JList friendlist;
 	Border border = BorderFactory.createTitledBorder("친구목록");
 	JScrollPane scroll = new JScrollPane();
 	JButton addFriendBtn = new JButton("친구추가");
-	static int friend_cnt = 0;
+	int friend_cnt = 0;
 	private DefaultListModel model;// = new Object[5000];
 	JLabel label;
 	public String tupleInfo = null; 
@@ -44,6 +48,7 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 		model = new DefaultListModel();
 		networkLib.loadfriendlist(model,friend_cnt);
 		friendlist = new JList(model);
+		friendlist.addMouseListener(new friendInfo(friendlist));
 		friendlist.setPreferredSize(new Dimension(500, 550));
 		scroll.setViewportView(friendlist);
 		scroll.setBorder(border); // 경계 설정
@@ -118,6 +123,7 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 
 		}
 	}
+	
 
 }
 
@@ -206,4 +212,21 @@ public class mainMenu extends JFrame {
 	}
 
 	
+}
+class friendInfo extends MouseAdapter{ //friendInfo 구상중...
+	private JList list;
+	    
+	  friendInfo(JList l){
+	   list = l;
+	   }
+
+	@Override
+	public void mouseClicked(MouseEvent e)
+	{
+		if(e.getClickCount()==2)
+		{
+			
+		}
+	}
+
 }
