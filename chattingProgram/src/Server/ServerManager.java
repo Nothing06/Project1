@@ -10,7 +10,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.StringTokenizer;
-
+enum personTableField{id,password,emp_no,name,age,tel};
 public class ServerManager extends Thread{
 	Socket socket;
 	DataInputStream in;
@@ -18,6 +18,9 @@ public class ServerManager extends Thread{
 	DB_Person db_person;
 	String ID="";   String password=""; 
 	String name="";  String age=""; String tel="";
+	String workspace = "C:\\Users\\user\\git\\Project1\\chattingProgram"
+			+ "\\";
+	personTableField passwordField = personTableField.valueOf("password");
 	ServerManager(Socket socket, DB_Person db_person)
 	{
 		this.socket =socket;
@@ -36,10 +39,10 @@ public class ServerManager extends Thread{
 		String tuple_id;
 		String tuple_password;
 		boolean is_valid = false;
-		for(int i=0;i< db_person.tuple_cnt; i+=1)
+		for(int i=0;i< db_person.person_tuplecount; i+=1)
 		{
-			tuple_id  = (String) db_person.customerList[i][0];
-			tuple_password = (String)db_person.customerList[i][1];
+			tuple_id  = (String) db_person.personTable.get(i)[0];//[0];
+			tuple_password = (String)db_person.personTable.get(i)[1];
 			System.out.println(tuple_id);
 			System.out.println(tuple_password);
 			if(tuple_id.equals(id) && tuple_password.equals(password))
@@ -65,9 +68,8 @@ public class ServerManager extends Thread{
 	void createNewMemberFile(String clientID)
 	{
 		BufferedWriter writer=null;
-		String path = "C:\\Users\\user\\eclipse-workspace\\chattingProgram"
-				+ "\\";
-		
+	
+		String path = new String(workspace);
 		path = path.concat(clientID);
 		path = path.concat("_Friends.txt");
 		System.out.println(path);
@@ -164,7 +166,7 @@ public class ServerManager extends Thread{
 	private void switchC(String content) {
 		String path;
 		BufferedReader reader;
-		path = "C:\\Users\\user\\eclipse-workspace\\chattingProgram\\";
+		path = new String(workspace);
 		try {
 			path = path.concat(content);
 			path = path.concat("_Friends.txt");
@@ -195,13 +197,12 @@ public class ServerManager extends Thread{
 		friendID = st.nextToken();
 		clientID = st.nextToken();
 //	System.out.println(clientID);
-		for(int i=0;i<db_person.tuple_cnt;i+=1)
+		for(int i=0;i<db_person.person_tuplecount;i+=1)
 		{
-			if(db_person.customerList[i][0].equals(friendID))
+			if(db_person.personTable.get(i)[0].equals(friendID))
 			{
 				idfound = true;
-				path = "C:\\Users\\user\\eclipse-workspace\\chattingProgram"
-						+ "\\";
+				path = workspace;
 				
 				path = path.concat(clientID);
 				path = path.concat("_Friends.txt");
@@ -219,7 +220,11 @@ public class ServerManager extends Thread{
 				
 				try {
 					for(int j=0;j<6;j+=1)
-						out.writeUTF((String)db_person.customerList[i][j]);
+					{
+						if(j==passwordField.ordinal())
+							continue;
+						out.writeUTF((String)db_person.personTable.get(i)[j]);
+					}
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

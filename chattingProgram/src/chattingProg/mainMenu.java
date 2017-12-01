@@ -153,7 +153,7 @@ public class mainMenu extends JFrame {
 	JPanel settingPanel;
 	// public static Thread sender = new Thread(new clientSender());
 	// public static Thread receiver = new Thread(new clientReceiver());
-	public static Socket socket;
+//	public static Socket socket;
 	private String loginID;
 	NetworkLib networkLib;
 	public mainMenu(NetworkLib networkLib, String ID) {

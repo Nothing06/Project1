@@ -43,7 +43,7 @@ public class LoginWindow extends JFrame implements ActionListener {
 	public String loginID;
 	String serverIp = "10.0.25.42";
 	registerDialog regDialog;
-	public static registerContent regContent;
+	public registerContent regContent;
 
 	public LoginWindow() {
 		networkLib = new NetworkLib(loginID);
@@ -115,7 +115,8 @@ public class LoginWindow extends JFrame implements ActionListener {
 
 	void registerProcess() {
 		// JOptionPane.showInputDialog
-		regDialog = new registerDialog(this, "회원가입");
+		regContent = new registerContent();
+		regDialog = new registerDialog(this, regContent, "회원가입");
 		regDialog.setVisible(true);
 		// sendRegisteredClientInfo();
 	}
@@ -130,7 +131,7 @@ public class LoginWindow extends JFrame implements ActionListener {
 		}
 	}
 
-	static boolean sendJoinedMemberInfo() {
+	boolean sendJoinedMemberInfo() {
 		boolean t = false;
 		Socket temp_Socket;
 		DataOutputStream temp_out;
@@ -214,9 +215,13 @@ class registerDialog extends JDialog implements ActionListener {
 	String[] str_items = { "아이디 ", "비밀번호 ", "이름 ", "나이 ", "연락처 " };
 	JButton regBtn = new JButton("등록");
 	JTextField[] txtArr = new JTextField[5];
-
-	public registerDialog(JFrame frame, String title) {
+	JFrame parent;
+	registerContent rc;
+	public registerDialog(JFrame frame, registerContent rc, String title) {
+		
 		super(frame, title);
+		parent  =  frame;
+		this.rc = rc;
 		reg_input = new JPanel();
 		reg_input.setLayout(new BoxLayout(reg_input, BoxLayout.Y_AXIS));
 		for (i = 0; i < item_cnt; i += 1) {
@@ -240,15 +245,14 @@ class registerDialog extends JDialog implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		// TODO Auto-generated method stub
-		LoginWindow.regContent = new registerContent();
 
-		LoginWindow.regContent.regID = txtArr[0].getText();
-		LoginWindow.regContent.regPassword = txtArr[1].getText();
-		LoginWindow.regContent.name = txtArr[2].getText();
-		LoginWindow.regContent.age = (txtArr[3].getText());
-		LoginWindow.regContent.tel = txtArr[4].getText();
+		rc.regID = txtArr[0].getText();
+		rc.regPassword = txtArr[1].getText();
+		rc.name = txtArr[2].getText();
+		rc.age = (txtArr[3].getText());
+		rc.tel = txtArr[4].getText();
 		JOptionPane.showInputDialog("hereA");
-		LoginWindow.sendJoinedMemberInfo();
+		((LoginWindow) parent).sendJoinedMemberInfo();
 		JOptionPane.showInputDialog("hereB");
 		this.dispose();
 

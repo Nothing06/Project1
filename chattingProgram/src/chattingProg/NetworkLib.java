@@ -13,10 +13,10 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
-
+enum personTableField{id,password,emp_no,name,age,tel};
 public  class NetworkLib {
 
-	public static String serverIp = "10.0.30.38";
+	public static String serverIp = "192.168.0.6";
 	public Socket socket;
 	public DataOutputStream out;
 	public DataInputStream in;
@@ -113,6 +113,7 @@ public  class NetworkLib {
 	public boolean getFriendInfoFromNetwork(String loginID,String friendId,ArrayList<Object> list) throws IOException {
 
 		boolean idExist = true;
+		personTableField pf =  personTableField.valueOf("password");
 //		Object[] searchIdInfo = new Object[6];
 		String searchId = "A";
 		searchId = searchId.concat(friendId);
@@ -122,6 +123,7 @@ public  class NetworkLib {
 		out.writeUTF(searchId); 
 		
 		for (int j = 0; j < 6; j += 1) {
+			if(j==(int)(pf.ordinal())) continue; // 
 			Object searchIdInfo = in.readUTF();
 			
 			if (searchIdInfo .equals("null")) {

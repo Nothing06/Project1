@@ -5,18 +5,20 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 import javax.swing.JTable;
-import javax.swing.table.DefaultTableModel;
 
 import com.mysql.jdbc.Statement;
 
 public class DB_Person{
 
-	public String[][] customerList=new String[100][6];
+	public ArrayList<String[]> personTable =new ArrayList<String[]>();
 	//public static DefaultTableModel model;
+	public ArrayList<String[]> chatContentTable= new ArrayList<String[]>();
 	public JTable table;
-	int tuple_cnt=0;
+	int person_tuplecount=0;
+	int chatContent_tuplecount=0;
 	String[] data;
 	Connection con;
 	PreparedStatement pstmt=null;
@@ -66,15 +68,22 @@ public class DB_Person{
 	public void addNewMemberInfo(String id, String password, String emp_no,
 								String name, String age, String tel)
 	{
-		customerList[tuple_cnt][0] = id;
-		customerList[tuple_cnt][1] = password;
-		customerList[tuple_cnt][2] = emp_no;
-		customerList[tuple_cnt][3] = name;
-		customerList[tuple_cnt][4] = (age);
-		customerList[tuple_cnt][5] = tel;
+		String[] tuple = new String[6];
+		tuple[0] = id;
+		tuple[1] = password;
+		tuple[2] = emp_no;
+		tuple[3] = name;
+		tuple[4] = age;
+		tuple[5] = id;
 		
+		personTable.add(tuple);
+//		customerList[tuple_cnt][1] = password;
+//		customerList[tuple_cnt][2] = emp_no;
+//		customerList[tuple_cnt][3] = name;
+//		customerList[tuple_cnt][4] = (age);
+//		customerList[tuple_cnt][5] = tel;
 	//	model.addRow(data);
-		tuple_cnt+=1;
+		person_tuplecount+=1;
 	}
 	public void loadChattingContentDB()
 	{
@@ -87,7 +96,7 @@ public class DB_Person{
 			System.out.println("rs: "+ rs);
 			while(rs.next())
 			{
-				loadItem();
+		//		loadItem();
 			}
 		}
 		catch(Exception e)
@@ -106,7 +115,7 @@ public class DB_Person{
 			System.out.println("rs: "+ rs);
 			while(rs.next())
 			{
-				loadItem();
+				loadTablePerson();
 			}
 		}
 		catch(Exception e)
@@ -115,25 +124,52 @@ public class DB_Person{
 		}
 	}
 
+	private void loadTableChatContent() throws SQLException {
+		String id = rs.getString("id");
+		String content = rs.getString("content");
+		
+		
+//		customerList[tuple_cnt][0] = id;
+//		customerList[tuple_cnt][1] = password;
+//		customerList[tuple_cnt][2] = Integer.toString(emp_no);
+//		customerList[tuple_cnt][3] = name;
+//		customerList[tuple_cnt][4] = Integer.toString(age);
+//		customerList[tuple_cnt][5] = tel;
+		String[] tuple = new String[2];
+		tuple[0] = id;
+		tuple[1] = content;
+		
+		chatContentTable.add(tuple);
+//	model.addRow(data);
+		chatContent_tuplecount+=1;
+	//	System.out.println(id + ", " + password + ", "+ emp_no + ", " + name + ", " + age + ", " + tel);
+	}
 
-	private void loadItem() throws SQLException {
+	private void loadTablePerson() throws SQLException {
 		String id = rs.getString("id");
 		String password = rs.getString("password");
 		int emp_no = rs.getInt("emp_no");
 		String name=rs.getString("name");
 		int age = rs.getInt("age");
 		String tel = rs.getString("tel");
+		String tmp[] = new String[6];
 		
-		
-		customerList[tuple_cnt][0] = id;
-		customerList[tuple_cnt][1] = password;
-		customerList[tuple_cnt][2] = Integer.toString(emp_no);
-		customerList[tuple_cnt][3] = name;
-		customerList[tuple_cnt][4] = Integer.toString(age);
-		customerList[tuple_cnt][5] = tel;
+		tmp[0] = id;
+		tmp[1] = password;
+		tmp[2] = Integer.toString(emp_no);
+		tmp[3] = name;
+		tmp[4] =  Integer.toString(age);
+		tmp[5] = tel;
+		personTable.add(tmp);
+//		customerList[tuple_cnt][0] = id;
+//		customerList[tuple_cnt][1] = password;
+//		customerList[tuple_cnt][2] = Integer.toString(emp_no);
+//		customerList[tuple_cnt][3] = name;
+//		customerList[tuple_cnt][4] = Integer.toString(age);
+//		customerList[tuple_cnt][5] = tel;
 		
 //	model.addRow(data);
-		tuple_cnt+=1;
+		person_tuplecount+=1;
 		System.out.println(id + ", " + password + ", "+ emp_no + ", " + name + ", " + age + ", " + tel);
 	}
 }
