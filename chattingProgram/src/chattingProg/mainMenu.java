@@ -2,6 +2,7 @@ package chattingProg;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -43,7 +44,7 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 	public String tupleInfo = null; 
 	String loginID;
 	NetworkLib networkLib;
-	
+	ArrayList<JDialog> dialog_childs = new ArrayList<>();
 	ArrayList<String[]> friendInfoTuple_list = new ArrayList<>();
 	
 	friendPanel(NetworkLib networkLib,String ID) {
@@ -52,7 +53,28 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 		model = new DefaultListModel();
 		networkLib.loadfriendInfoFromServer(friendInfoTuple_list,model,friend_cnt);
 		friendlist = new JList(model);
-		friendlist.addMouseListener(new friendInfo(friendlist, friendInfoTuple_list));
+		
+		 MouseListener mouseListener = new MouseAdapter() {
+		      public void mouseClicked(MouseEvent mouseEvent) {
+		        JList list = (JList) mouseEvent.getSource();
+		        if (mouseEvent.getClickCount() == 2) {
+		          int index = list.locationToIndex(mouseEvent.getPoint());
+		          if (index >= 0) {
+		        	  if(dialog_childs.size() >= 1)
+		        	  {
+		        		  dialog_childs.get(0).dispose();
+		        		  dialog_childs.remove(0);
+		        	  }
+		  			friendInfoDialog f = new friendInfoDialog(friendInfoTuple_list.get(index));
+		  			dialog_childs.add(f);
+		  			
+		          }
+		          
+		        }
+		      }
+		    };
+
+		friendlist.addMouseListener(mouseListener);
 		friendlist.setPreferredSize(new Dimension(500, 550));
 		scroll.setViewportView(friendlist);
 		scroll.setBorder(border); // 경계 설정
@@ -216,47 +238,37 @@ public class mainMenu extends JFrame {
 
 	
 }
-class friendInfo extends MouseAdapter{ //friendInfo 구상중...
-	private JList list;
-	  friendInfoDialog friendInfoDialog;
-	  ArrayList<String[]> friendsInfoTuples;
-	  int selectedIndex=0;
-	  friendInfo(JList l, ArrayList<String[]> friendsInfoTuples){
-	   list = l;
-	   this.friendsInfoTuples =friendsInfoTuples; 
-	   }
-
-	@Override
-	public void mouseClicked(MouseEvent e)
-	{
-		if(e.getClickCount()==2)
-		{
-			selectedIndex = list.getSelectedIndex();
-			friendInfoDialog = new friendInfoDialog(friendsInfoTuples.get(selectedIndex));
-		}
-	}
-
-}
 class friendInfoDialog extends JDialog implements ActionListener {
 
 	JLabel ID_label;
 	JLabel name_label;
 	JLabel tel_label;
+	JLabel age_label;
 	JPanel friendInfoPanel = new JPanel();
 	JButton talkBtn;
+	Font f = new Font("바탕", Font.ITALIC, 25);
+	
 	friendInfoDialog(String[] friendInfoTuple)
 	{
 		friendInfoPanel.setLayout(new BoxLayout(friendInfoPanel, BoxLayout.Y_AXIS));
-		ID_label = new JLabel(friendInfoTuple[0]);
-		name_label = new JLabel(friendInfoTuple[3]);
-		tel_label = new JLabel(friendInfoTuple[5]);
+		ID_label = new JLabel("아이디 : " + friendInfoTuple[0]);
+		ID_label.setFont(f);
+		name_label = new JLabel("이름 : " + friendInfoTuple[3]);
+		name_label.setFont(f);
+		age_label = new JLabel("나이 : " + friendInfoTuple[4]);
+		age_label.setFont(f);
+		tel_label = new JLabel("전화번호: " + friendInfoTuple[5]);
+		tel_label.setFont(f);
 		talkBtn = new JButton("대화하기");
 		friendInfoPanel.add(ID_label);
 		friendInfoPanel.add(name_label);
+		friendInfoPanel.add(age_label);
 		friendInfoPanel.add(tel_label);
 		friendInfoPanel.add(talkBtn);
 		talkBtn.addActionListener(this);
 		getContentPane().add(friendInfoPanel);
+		setSize(400,400);
+		setVisible(true);
 	}
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
