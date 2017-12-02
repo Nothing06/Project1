@@ -4,11 +4,13 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.StringTokenizer;
 enum personTableField{id,password,emp_no,name,age,tel};
 public class ServerManager extends Thread{
@@ -103,17 +105,16 @@ public class ServerManager extends Thread{
 		switch(message.charAt(0))
 		{
 		case 'A': // 친구아이디찾기기능  통신  // content : ID
-			SwitchA(db_person, content, idfound);
+			saveAndSendClientInfo(db_person, content);
 			break;
-		case 'C': //LoadingReply  ...  content:ID
-			switchC(content);
-			
+		case 'C': // 회원한명의 등록된 각각의 친구정보들을 보내줌. 
+			sendOnesFriendInfo(content);
 			break;
 		case 'D':  
 			joinMember();
 			break;
 		case 'L':
-			switchL(content); 
+			sendLoginFlag(content); 
 			break;
 		case '1': // 방 통신
 			break;
@@ -123,7 +124,7 @@ public class ServerManager extends Thread{
 			break;
 		}
 	}
-	private void switchL(String content) {
+	private void sendLoginFlag(String content) {
 		String loginID;
 		String loginPassword;
 		try {
@@ -162,8 +163,79 @@ public class ServerManager extends Thread{
 		db_person.addNewMemberInfo(ID, password, "2009100224", name, age, tel);
 		createNewMemberFile(ID);
 	}
-	private void switchC(String content) {
+	private void sendOnesFriendInfo(String clientID) {
+		BufferedReader reader;
 		String path;
+		String friendID;
+		ArrayList<String> friendID_list = new ArrayList<>();
+		int friendID_list_idx=0;
+		
+		System.out.println("* In sendOnesFriendInfo()");
+		path = new String(workspace);
+		path = path.concat(clientID);
+		path = path.concat("_Friends.txt");
+		
+		try {
+		//	System.out.println(clientID);
+			reader = new BufferedReader(new FileReader(path));
+		
+			while(true)
+			{
+			friendID = reader.readLine();
+			//System.out.print(friendID);
+			if(friendID == null)
+				break;
+			else if(friendID.equals(""))
+				continue;
+			//friendID = friendID.substring(0, friendID.length()-1);
+			System.out.print(friendID + "//");
+			System.out.println("HereA" + friendID_list);
+			friendID_list.add(friendID);
+			}
+			System.out.println("HereA" + friendID_list);
+			Collections.sort(friendID_list);
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		finally {
+			
+		}
+	
+		System.out.println("HereB" + friendID_list);
+		//	System.out.println("tuplecount: " + db_person.person_tuplecount);
+		for(int tuple_idx=0;tuple_idx<db_person.person_tuplecount;tuple_idx+=1)
+		{
+		//	System.out.println("tuple_idx: " + tuple_idx);
+		//	System.out.println("friendID_list.get(friendID_list_idx): " + friendID_list.get(friendID_list_idx));
+			if(db_person.personTable.get(tuple_idx)[0].equals(friendID_list.get(friendID_list_idx)))
+			{
+				System.out.println("friendID_list_idx: " + friendID_list_idx);
+				try 
+				{
+					for(int j=0;j<6;j+=1)
+					{
+						if(j==passwordField.ordinal())
+							continue;
+						out.writeUTF((String)db_person.personTable.get(tuple_idx)[j]);
+					}
+				}catch (IOException e) 
+				{	// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				friendID_list_idx+=1;
+				if(friendID_list.size() == friendID_list_idx)
+					break;
+			}
+		}
+		System.out.println("here!!");
+		try {
+			out.writeUTF("#"); 
+		}
+		catch(Exception e) {}
+		finally{}// 다보냈다는 FLAG 신호
+		/*String path;
 		BufferedReader reader;
 		path = new String(workspace);
 		try {
@@ -186,43 +258,28 @@ public class ServerManager extends Thread{
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace(); 
-		}
+		}*/
 	}
-	private void SwitchA(DB_Person db_person, String friendID, boolean idfound) {
-		String path;
-		BufferedWriter writer;
+	private void saveAndSendClientInfo(DB_Person db_person, String tryingAddID) {
 		String clientID;
-		StringTokenizer st = new StringTokenizer(friendID,".");
-		friendID = st.nextToken();
+		boolean idfound=false;
+		StringTokenizer st = new StringTokenizer(tryingAddID,".");
+		
+		tryingAddID = st.nextToken();
 		clientID = st.nextToken();
-//	System.out.println(clientID);
-		for(int i=0;i<db_person.person_tuplecount;i+=1)
+
+		for(int tuple_idx=0;tuple_idx<db_person.person_tuplecount;tuple_idx+=1)
 		{
-			if(db_person.personTable.get(i)[0].equals(friendID))
+			if(db_person.personTable.get(tuple_idx)[0].equals(tryingAddID))
 			{
 				idfound = true;
-				path = workspace;
-				
-				path = path.concat(clientID);
-				path = path.concat("_Friends.txt");
-				System.out.println(path);
-			//	System.out.println(content);
-				try {
-					writer = new BufferedWriter(new FileWriter(path, true));
-					writer.write(friendID+"\n");
-					writer.flush();
-					writer.close();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				
+				saveClientIDTo_Friendstxt(clientID,tryingAddID);
 				try {
 					for(int j=0;j<6;j+=1)
 					{
 						if(j==passwordField.ordinal())
 							continue;
-						out.writeUTF((String)db_person.personTable.get(i)[j]);
+						out.writeUTF((String)db_person.personTable.get(tuple_idx)[j]);
 					}
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
@@ -235,11 +292,30 @@ public class ServerManager extends Thread{
 		{
 			for(int j=0;j<6;j+=1)
 				try {
-					out.writeUTF("null");
+					out.writeUTF(".");
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+		}
+	}
+	private void saveClientIDTo_Friendstxt( String clientID,String tryingAddID) {
+		String path;
+		BufferedWriter writer;
+		
+		path = workspace;
+		path = path.concat(clientID);
+		path = path.concat("_Friends.txt");
+		System.out.println(path);
+//	System.out.println(content);
+		try {
+			writer = new BufferedWriter(new FileWriter(path, true));
+			writer.write(tryingAddID+"\n");
+			writer.flush();
+			writer.close();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
 	}
 	public void run()

@@ -108,7 +108,7 @@ public class DB_Person{
 	{
 		try
 		{
-			String sql = "select id,password,emp_no,name,age,tel from person";
+			String sql = "select id,password,emp_no,name,age,tel from person order by id";
 			pstmt = con.prepareStatement(sql);
 			System.out.println("pstmt : " + pstmt);
 			rs = pstmt.executeQuery();

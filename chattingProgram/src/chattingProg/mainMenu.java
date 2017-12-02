@@ -16,6 +16,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -42,13 +43,16 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 	public String tupleInfo = null; 
 	String loginID;
 	NetworkLib networkLib;
+	
+	ArrayList<String[]> friendInfoTuple_list = new ArrayList<>();
+	
 	friendPanel(NetworkLib networkLib,String ID) {
 		this.networkLib = networkLib;
 		this.loginID = ID;
 		model = new DefaultListModel();
-		networkLib.loadfriendlist(model,friend_cnt);
+		networkLib.loadfriendInfoFromServer(friendInfoTuple_list,model,friend_cnt);
 		friendlist = new JList(model);
-		friendlist.addMouseListener(new friendInfo(friendlist));
+		friendlist.addMouseListener(new friendInfo(friendlist, friendInfoTuple_list));
 		friendlist.setPreferredSize(new Dimension(500, 550));
 		scroll.setViewportView(friendlist);
 		scroll.setBorder(border); // 경계 설정
@@ -67,7 +71,7 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 	@Override
 	public void valueChanged(ListSelectionEvent arg0) {
 		// TODO Auto-generated method stub
-
+		//	arg0.
 	}
 
 	boolean checkAlreadyFriend(String s) {
@@ -104,21 +108,20 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 	}
 
 	private void fillUpModelFromServer( String friendId) {
-		
+		String[] friendInfoTuple = new String[6];
 		try {
-			ArrayList<Object> list = new ArrayList<Object> ();
 		
-			boolean idExist = networkLib.getFriendInfoFromNetwork(loginID,friendId,list);
+			boolean idExist = networkLib.getClientInfoFromServer(loginID,friendId,friendInfoTuple,
+																			friendInfoTuple_list);
 			if (idExist == true) {
-				model.addElement(list.get(0));
-				friend_cnt += 1;
+				model.addElement(friendInfoTuple[0]);
+				friendInfoTuple_list.add(friendInfoTuple);
 			} else {
 				JOptionPane.showInputDialog("입력하신 아이디는 존재하지 않습니다.");
 			}
-
-			System.out.println("* friendInfo");
-			for (int j = 0; j < 6; j += 1)
-				System.out.println(list.get(j));
+	
+					friend_cnt += 1;
+			//	System.out.println(list.get(j));
 		} catch (Exception e) {
 
 		}
@@ -215,9 +218,12 @@ public class mainMenu extends JFrame {
 }
 class friendInfo extends MouseAdapter{ //friendInfo 구상중...
 	private JList list;
-	    
-	  friendInfo(JList l){
+	  friendInfoDialog friendInfoDialog;
+	  ArrayList<String[]> friendsInfoTuples;
+	  int selectedIndex=0;
+	  friendInfo(JList l, ArrayList<String[]> friendsInfoTuples){
 	   list = l;
+	   this.friendsInfoTuples =friendsInfoTuples; 
 	   }
 
 	@Override
@@ -225,8 +231,37 @@ class friendInfo extends MouseAdapter{ //friendInfo 구상중...
 	{
 		if(e.getClickCount()==2)
 		{
-			
+			selectedIndex = list.getSelectedIndex();
+			friendInfoDialog = new friendInfoDialog(friendsInfoTuples.get(selectedIndex));
 		}
 	}
 
+}
+class friendInfoDialog extends JDialog implements ActionListener {
+
+	JLabel ID_label;
+	JLabel name_label;
+	JLabel tel_label;
+	JPanel friendInfoPanel = new JPanel();
+	JButton talkBtn;
+	friendInfoDialog(String[] friendInfoTuple)
+	{
+		friendInfoPanel.setLayout(new BoxLayout(friendInfoPanel, BoxLayout.Y_AXIS));
+		ID_label = new JLabel(friendInfoTuple[0]);
+		name_label = new JLabel(friendInfoTuple[3]);
+		tel_label = new JLabel(friendInfoTuple[5]);
+		talkBtn = new JButton("대화하기");
+		friendInfoPanel.add(ID_label);
+		friendInfoPanel.add(name_label);
+		friendInfoPanel.add(tel_label);
+		friendInfoPanel.add(talkBtn);
+		talkBtn.addActionListener(this);
+		getContentPane().add(friendInfoPanel);
+	}
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	
 }

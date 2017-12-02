@@ -7,13 +7,14 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
-enum personTableField{id,password,emp_no,name,age,tel};
+enum EnumPerson{id,password,emp_no,name,age,tel};
 public  class NetworkLib {
 
 	public static String serverIp = "192.168.0.6";
@@ -110,49 +111,72 @@ public  class NetworkLib {
 //		out.writeUTF(ID);
 //		out.writeUTF(new String(password.getPassword()));
 	}
-	public boolean getFriendInfoFromNetwork(String loginID,String friendId,ArrayList<Object> list) throws IOException {
+	public boolean getClientInfoFromServer(String loginID,String friendId,String[] tuple,
+										ArrayList<String[]> list) throws IOException {
 
 		boolean idExist = true;
-		personTableField pf =  personTableField.valueOf("password");
+		EnumPerson passwordField =  EnumPerson.valueOf("password");
 //		Object[] searchIdInfo = new Object[6];
-		String searchId = "A";
-		searchId = searchId.concat(friendId);
-		searchId = searchId.concat(".");
-		searchId = searchId.concat(loginID);
+		String searchPacket = "A";
+		searchPacket = searchPacket.concat(friendId);
+		searchPacket = searchPacket.concat(".");
+		searchPacket = searchPacket.concat(loginID);
 
-		out.writeUTF(searchId); 
+		out.writeUTF(searchPacket); 
 		
 		for (int j = 0; j < 6; j += 1) {
-			if(j==(int)(pf.ordinal())) continue; // 
-			Object searchIdInfo = in.readUTF();
+			if(j==(int)(passwordField.ordinal())) continue; // 
+			String searchIdInfo_attribute = in.readUTF();
 			
-			if (searchIdInfo .equals("null")) {
+			if (searchIdInfo_attribute.equals(".")) {
 				idExist = false;
 			}
 			else
 			{
-				list.add(searchIdInfo);
+				tuple[j] = searchIdInfo_attribute;
 			}
 		}
+		list.add(tuple);
 		return idExist;
 	}
-	boolean loadfriendlist(DefaultListModel dlm, int friend_cnt) {
+	boolean loadfriendInfoFromServer(ArrayList<String[]> friendInfo_list, DefaultListModel dlm, int friend_cnt) {
 		boolean t = false;
 		String friendId = null;
+		String attribute;
+		String[] tuple;
 		String message = null;
+		EnumPerson passwordField =  EnumPerson.valueOf("password");
+		JOptionPane.showInputDialog("H0");
 		try {
 			message = "C";
 			message = message.concat(loginID);
 			out.writeUTF(message);
-
+			JOptionPane.showInputDialog("H0");
 			while (true) {
-				friendId = in.readUTF();
-				if (friendId.equals(".")) {
-					t = true;
-					break;
+				//friendId = in.readUTF();
+				tuple = new String[6];
+				for(int j=0;j<6;j+=1)
+				{
+					if(j==passwordField.ordinal())
+						continue;
+				//	Scanner s = new Scanner(System.in);
+				//	s.nextLine();
+					tuple[j] = in.readUTF();
+				//	JOptionPane.showInputDialog(tuple[j]);
+					if(tuple[j].equals("#"))
+					{
+						t=true;
+						break;
+					}
+				//	JOptionPane.showInputDialog("H1");
 				}
-				// System.out.println(friendId);
-				dlm.addElement(friendId);
+				if(t==true)
+					break;
+			//	JOptionPane.showInputDialog("H2");
+			//	System.out.println("tuple: " + tuple[0] + " " + tuple[2] + " "+tuple[3] + 
+				//									" " + tuple[4] + " " + tuple[5]);
+				dlm.addElement(tuple[0]);
+				friendInfo_list.add(tuple);
 				friend_cnt += 1;
 			}
 		} catch (IOException e) {
