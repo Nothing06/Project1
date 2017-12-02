@@ -265,7 +265,9 @@ public class ServerManager extends Thread{
 		boolean idfound=false;
 		StringTokenizer st = new StringTokenizer(tryingAddID,".");
 		
+		System.out.println("tryingAddID: " + tryingAddID);
 		tryingAddID = st.nextToken();
+		System.out.println("tryingAddID: " + tryingAddID);
 		clientID = st.nextToken();
 
 		for(int tuple_idx=0;tuple_idx<db_person.person_tuplecount;tuple_idx+=1)

@@ -111,10 +111,10 @@ public  class NetworkLib {
 //		out.writeUTF(ID);
 //		out.writeUTF(new String(password.getPassword()));
 	}
-	public boolean getClientInfoFromServer(String loginID,String friendId,String[] tuple,
-										ArrayList<String[]> list) throws IOException {
+	public boolean getClientInfoFromServer(String loginID,String friendId,String[] tuple
+										) throws IOException {
 
-		boolean idExist = true;
+		boolean clientExist = true;
 		EnumPerson passwordField =  EnumPerson.valueOf("password");
 //		Object[] searchIdInfo = new Object[6];
 		String searchPacket = "A";
@@ -129,17 +129,17 @@ public  class NetworkLib {
 			String searchIdInfo_attribute = in.readUTF();
 			
 			if (searchIdInfo_attribute.equals(".")) {
-				idExist = false;
+				clientExist = false;
 			}
 			else
 			{
 				tuple[j] = searchIdInfo_attribute;
 			}
 		}
-		list.add(tuple);
-		return idExist;
+		
+		return clientExist;
 	}
-	boolean loadfriendInfoFromServer(ArrayList<String[]> friendInfo_list, DefaultListModel dlm, int friend_cnt) {
+	boolean loadfriendInfoFromServer(ArrayList<String[]> friendInfo_list, DefaultListModel dlm) {
 		boolean t = false;
 		String friendId = null;
 		String attribute;
@@ -177,7 +177,7 @@ public  class NetworkLib {
 				//									" " + tuple[4] + " " + tuple[5]);
 				dlm.addElement(tuple[0]);
 				friendInfo_list.add(tuple);
-				friend_cnt += 1;
+				//friend_cnt += 1;
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

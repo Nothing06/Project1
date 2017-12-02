@@ -51,7 +51,7 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 		this.networkLib = networkLib;
 		this.loginID = ID;
 		model = new DefaultListModel();
-		networkLib.loadfriendInfoFromServer(friendInfoTuple_list,model,friend_cnt);
+		networkLib.loadfriendInfoFromServer(friendInfoTuple_list,model);
 		friendlist = new JList(model);
 		
 		 MouseListener mouseListener = new MouseAdapter() {
@@ -99,9 +99,14 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 	boolean checkAlreadyFriend(String s) {
 		int i = 0;
 		boolean t = false;
-		for (i = 0; i < friend_cnt; i += 1) {
-			if (model.getElementAt(i).equals(s)) {
+	//	System.out.println("friend_cnt: " + friend_cnt);
+		JOptionPane.showInputDialog(friend_cnt);
+		for (i = 0; i < friendInfoTuple_list.size(); i += 1) {
+	//		if (model.getElementAt(i).equals(s)) {
+			JOptionPane.showInputDialog(friendInfoTuple_list.get(i)[0]);
+			if(friendInfoTuple_list.get(i)[0].equals(s)) {
 				t = true;
+				break;
 			}
 		}
 		return t;
@@ -133,16 +138,20 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 		String[] friendInfoTuple = new String[6];
 		try {
 		
-			boolean idExist = networkLib.getClientInfoFromServer(loginID,friendId,friendInfoTuple,
-																			friendInfoTuple_list);
+			boolean idExist = networkLib.getClientInfoFromServer(loginID,friendId,friendInfoTuple
+																			);
 			if (idExist == true) {
-				model.addElement(friendInfoTuple[0]);
-				friendInfoTuple_list.add(friendInfoTuple);
+			//	if(!checkAlreadyFriend(friendId))
+				{
+					model.addElement(friendInfoTuple[0]);
+					friendInfoTuple_list.add(friendInfoTuple);
+			//		friend_cnt += 1;
+				}
 			} else {
 				JOptionPane.showInputDialog("입력하신 아이디는 존재하지 않습니다.");
 			}
 	
-					friend_cnt += 1;
+					
 			//	System.out.println(list.get(j));
 		} catch (Exception e) {
 
