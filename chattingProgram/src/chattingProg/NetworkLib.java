@@ -17,7 +17,7 @@ import javax.swing.JTextField;
 enum EnumPerson{id,password,emp_no,name,age,tel};
 public  class NetworkLib {
 
-	public static String serverIp = "192.168.0.6";
+	public String serverIp = "192.168.0.6";
 	public Socket socket;
 	public DataOutputStream out;
 	public DataInputStream in;

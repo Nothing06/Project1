@@ -11,21 +11,26 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 enum personTableField{id,password,emp_no,name,age,tel};
 public class ServerManager extends Thread{
 	Socket socket;
 	DataInputStream in;
 	DataOutputStream out;
+	HashMap clients;
 	DB_Person db_person;
 	String ID="";   String password=""; 
 	String name="";  String age=""; String tel="";
 	String workspace = "C:\\Users\\user\\git\\Project1\\chattingProgram\\";
 	personTableField passwordField = personTableField.valueOf("password");
+	@SuppressWarnings("unchecked")
 	ServerManager(Socket socket, DB_Person db_person)
 	{
 		this.socket =socket;
 		this.db_person = db_person;
+		clients = new HashMap();
+		Collections.synchronizedMap(clients);
 		try {
 			in = new DataInputStream(socket.getInputStream());
 			out = new DataOutputStream(socket.getOutputStream());
@@ -86,10 +91,10 @@ public class ServerManager extends Thread{
 		}
 		
 	}
-	public void reply(String message)
+	public void reply(String packet)
 	{
 		String content=null;
-			content = message.substring(1,message.length());
+			content = packet.substring(1,packet.length());
 	//	System.out.println(message);
 		boolean idfound = false;
 		String path = null;
@@ -102,7 +107,7 @@ public class ServerManager extends Thread{
 		String loginID="";
 		String loginPassword="";
 
-		switch(message.charAt(0))
+		switch(packet.charAt(0))
 		{
 		case 'A': // 친구아이디찾기기능  통신  // content : ID
 			saveAndSendClientInfo(db_person, content);
@@ -115,6 +120,9 @@ public class ServerManager extends Thread{
 			break;
 		case 'L':
 			sendLoginFlag(content); 
+			break;
+		case 'M':
+			sendChatMessage(content);
 			break;
 		case '1': // 방 통신
 			break;
@@ -320,6 +328,10 @@ public class ServerManager extends Thread{
 			e1.printStackTrace();
 		}
 	}
+	private void sendChatMessage(String content)
+	{
+		
+	}
 	public void run()
 	{
 		String id=null;
@@ -334,6 +346,7 @@ public class ServerManager extends Thread{
 					}
 					catch(Exception e)
 					{
+						e.printStackTrace();
 						break;
 					}
 					

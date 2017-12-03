@@ -19,3 +19,5 @@ gold
 
 yellow
 ninza06
+what_where
+yellow2

@@ -136,7 +136,7 @@ public class LoginWindow extends JFrame implements ActionListener {
 		Socket temp_Socket;
 		DataOutputStream temp_out;
 		try {
-			temp_Socket = new Socket(NetworkLib.serverIp, 8000);
+			temp_Socket = new Socket(networkLib.serverIp, 8000);
 			temp_out = new DataOutputStream(temp_Socket.getOutputStream());
 
 			temp_out.writeUTF("D");

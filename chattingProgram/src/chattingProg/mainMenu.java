@@ -53,7 +53,8 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 		model = new DefaultListModel();
 		networkLib.loadfriendInfoFromServer(friendInfoTuple_list,model);
 		friendlist = new JList(model);
-		
+		friendlist.setFixedCellHeight(40);
+		friendlist.setFixedCellWidth(300);
 		 MouseListener mouseListener = new MouseAdapter() {
 		      public void mouseClicked(MouseEvent mouseEvent) {
 		        JList list = (JList) mouseEvent.getSource();

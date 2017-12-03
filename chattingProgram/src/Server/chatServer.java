@@ -1,19 +1,12 @@
 package Server;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.StringTokenizer;
+import java.util.HashMap;
 
 public class chatServer {
 	public DB_Person db;
+	
 	public void serverLoop()
 	{
 		ServerSocket serverSocket = null;
