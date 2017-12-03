@@ -38,6 +38,7 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 	Border border = BorderFactory.createTitledBorder("친구목록");
 	JScrollPane scroll = new JScrollPane();
 	JButton addFriendBtn = new JButton("친구추가");
+	JButton delFriendBtn = new JButton("친구삭제");
 	int friend_cnt = 0;
 	private DefaultListModel model;// = new Object[5000];
 	JLabel label;
@@ -86,7 +87,7 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 		// 리스트의 데이터가 될 목록 설정
 		friendlist.addListSelectionListener(this); // 이벤트리스너 장착
 		addFriendBtn.addActionListener(this);
-
+		delFriendBtn.addActionListener(this);
 		add(scroll, BorderLayout.CENTER);
 		add(addFriendBtn, BorderLayout.SOUTH);
 		setSize(400, 500);
@@ -114,25 +115,32 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent arg0) {
+	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub 
-		String friendId = JOptionPane.showInputDialog("친구 아이디 입력: ");
-
-		if (friendId == null)
-			return;
-
-		if (friendId.equals(loginID)) {
-			JOptionPane.showInputDialog("자기자신의 아이디는 추가할수 없습니다.");
-			return;
-		} else if (friendId.equals("")) {
-			return;
+		if(e.getSource() == addFriendBtn)
+		{
+			String friendId = JOptionPane.showInputDialog("친구 아이디 입력: ");
+	
+			if (friendId == null)
+				return;
+	
+			if (friendId.equals(loginID)) {
+				JOptionPane.showInputDialog("자기자신의 아이디는 추가할수 없습니다.");
+				return;
+			} else if (friendId.equals("")) {
+				return;
+			}
+			if (checkAlreadyFriend(friendId)) {
+				JOptionPane.showInputDialog("이미 친구입니다.");
+				return;
+			}
+			// System.out.println(friendId);
+			fillUpModelFromServer( friendId);
 		}
-		if (checkAlreadyFriend(friendId)) {
-			JOptionPane.showInputDialog("이미 친구입니다.");
-			return;
+		else if(e.getSource() == delFriendBtn)
+		{
+			JOptionPane.showConfirmDialog(this,"정말 삭제?");
 		}
-		// System.out.println(friendId);
-		fillUpModelFromServer( friendId);
 	}
 
 	private void fillUpModelFromServer( String friendId) {

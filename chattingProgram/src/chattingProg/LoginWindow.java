@@ -124,7 +124,7 @@ public class LoginWindow extends JFrame implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 
 		if (e.getSource() == loginButton) {
-			JOptionPane.showInputDialog("LoginWindow-ActionPerformed");
+		//	JOptionPane.showInputDialog("LoginWindow-ActionPerformed");
 			networkLib.loginProcess(this,  loginID_input, password_input);
 		} else if (e.getSource() == regButton) {
 			registerProcess();
@@ -254,11 +254,14 @@ class registerDialog extends JDialog implements ActionListener {
 		}
 		rc.regPassword = txtArr[1].getText();
 		if(!inputChecker.checkPassword(rc.regPassword))
-			return false;
-		rc.name = txtArr[2].getText();
-		if(!inputChecker.checkPassword(rc.name))
 		{
 			JOptionPane.showInputDialog("비밀번호는 7글자 이상이여야합니다.");
+			return false;
+		}
+		rc.name = txtArr[2].getText();
+		if(!inputChecker.checkName(rc.name))
+		{
+			JOptionPane.showInputDialog("이름은 2글자 이상이여야 합니다.");
 			return false;
 		}
 		rc.age = (txtArr[3].getText());
@@ -281,10 +284,13 @@ class registerDialog extends JDialog implements ActionListener {
 
 		
 	//	JOptionPane.showInputDialog("hereA");
+		JOptionPane.showInputDialog("hereA");
 		if(e.getSource() == regBtn)
 		{
+			JOptionPane.showInputDialog("hereB");
 			if(getJoinInputInfo_Ok())
 			{
+				JOptionPane.showInputDialog("hereC");
 				((LoginWindow) parent).sendJoinedMemberInfo();
 				this.dispose();
 			}

@@ -7,14 +7,15 @@ import java.io.DataOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 enum personTableField{id,password,emp_no,name,age,tel};
-public class ServerManager extends Thread{
+public class ClientThreadManager extends Thread{
 	Socket socket;
 	DataInputStream in;
 	DataOutputStream out;
@@ -25,7 +26,7 @@ public class ServerManager extends Thread{
 	String workspace = "C:\\Users\\user\\git\\Project1\\chattingProgram\\";
 	personTableField passwordField = personTableField.valueOf("password");
 	@SuppressWarnings("unchecked")
-	ServerManager(Socket socket, DB_Person db_person)
+	ClientThreadManager(Socket socket, DB_Person db_person)
 	{
 		this.socket =socket;
 		this.db_person = db_person;
@@ -124,6 +125,9 @@ public class ServerManager extends Thread{
 		case 'M':
 			sendChatMessage(content);
 			break;
+		case 'Q':
+			
+			break;
 		case '1': // 방 통신
 			break;
 		case '2': //...
@@ -201,7 +205,7 @@ public class ServerManager extends Thread{
 			friendID_list.add(friendID);
 			}
 			System.out.println("HereA" + friendID_list);
-			Collections.sort(friendID_list);
+			Collections.sort(friendID_list, String.CASE_INSENSITIVE_ORDER);
 		}
 		catch(Exception e)
 		{
@@ -211,13 +215,15 @@ public class ServerManager extends Thread{
 			
 		}
 	
-		System.out.println("HereB" + friendID_list);
+	//	System.out.println("HereB" + friendID_list);
 		//	System.out.println("tuplecount: " + db_person.person_tuplecount);
+		if(friendID_list.size() > 0)
+		{
 		for(int tuple_idx=0;tuple_idx<db_person.person_tuplecount;tuple_idx+=1)
 		{
 		//	System.out.println("tuple_idx: " + tuple_idx);
 		//	System.out.println("friendID_list.get(friendID_list_idx): " + friendID_list.get(friendID_list_idx));
-			if(db_person.personTable.get(tuple_idx)[0].equals(friendID_list.get(friendID_list_idx)))
+			if( db_person.personTable.get(tuple_idx)[0].equals(friendID_list.get(friendID_list_idx))) 		
 			{
 				System.out.println("friendID_list_idx: " + friendID_list_idx);
 				try 
@@ -236,6 +242,7 @@ public class ServerManager extends Thread{
 				if(friendID_list.size() == friendID_list_idx)
 					break;
 			}
+		}
 		}
 		System.out.println("here!!");
 		try {
@@ -283,7 +290,7 @@ public class ServerManager extends Thread{
 			if(db_person.personTable.get(tuple_idx)[0].equals(tryingAddID))
 			{
 				idfound = true;
-				saveClientIDTo_Friendstxt(clientID,tryingAddID);
+				saveTryingAddIDTo_clientIDtxt(clientID,tryingAddID);
 				try {
 					for(int j=0;j<6;j+=1)
 					{
@@ -302,6 +309,7 @@ public class ServerManager extends Thread{
 		{
 			for(int j=0;j<6;j+=1)
 				try {
+					if(j==1) continue;
 					out.writeUTF(".");
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
@@ -309,9 +317,9 @@ public class ServerManager extends Thread{
 				}
 		}
 	}
-	private void saveClientIDTo_Friendstxt( String clientID,String tryingAddID) {
+	private void saveTryingAddIDTo_clientIDtxt( String clientID,String tryingAddID) {
 		String path;
-		BufferedWriter writer;
+		PrintWriter writer;
 		
 		path = workspace;
 		path = path.concat(clientID);
@@ -319,8 +327,12 @@ public class ServerManager extends Thread{
 		System.out.println(path);
 //	System.out.println(content);
 		try {
-			writer = new BufferedWriter(new FileWriter(path, true));
-			writer.write(tryingAddID+"\n");
+			writer = new PrintWriter(new FileWriter(path, true));
+	
+		//	writer.flush();
+			System.out.print("In saveClientIDTo_Friendstxt : " + tryingAddID + "\n");
+			writer.write(tryingAddID);
+			writer.println();
 			writer.flush();
 			writer.close();
 		} catch (IOException e1) {
@@ -344,9 +356,9 @@ public class ServerManager extends Thread{
 					try {
 					message = in.readUTF();
 					}
-					catch(Exception e)
+					catch(SocketException e)
 					{
-						e.printStackTrace();
+						System.out.println("클라이언트와의 연결을 종료합니다.");
 						break;
 					}
 					
@@ -356,13 +368,7 @@ public class ServerManager extends Thread{
 		}
 		catch(Exception e) { e.printStackTrace();}
 		finally {
-			try {
-				in.close();
-				out.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			
 		
 		}
 		

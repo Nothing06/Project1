@@ -17,7 +17,7 @@ import javax.swing.JTextField;
 enum EnumPerson{id,password,emp_no,name,age,tel};
 public  class NetworkLib {
 
-	public String serverIp = "192.168.0.6";
+	public String serverIp = "172.30.1.46";
 	public Socket socket;
 	public DataOutputStream out;
 	public DataInputStream in;
@@ -162,12 +162,13 @@ public  class NetworkLib {
 				//	Scanner s = new Scanner(System.in);
 				//	s.nextLine();
 					tuple[j] = in.readUTF();
-				//	JOptionPane.showInputDialog(tuple[j]);
+					
 					if(tuple[j].equals("#"))
 					{
 						t=true;
 						break;
 					}
+					JOptionPane.showInputDialog(tuple[j]);
 				//	JOptionPane.showInputDialog("H1");
 				}
 				if(t==true)

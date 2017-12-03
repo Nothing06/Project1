@@ -55,7 +55,7 @@ public class InputChecker {
 	{
 		int i=0;
 		int len = phoneNum.length();
-		String firstToken = phoneNum.substring(0, 2);
+		String firstToken = phoneNum.substring(0, 3);
 		if(len != 13)
 		{
 			return false;

@@ -20,7 +20,7 @@ public class chatServer {
 				socket = serverSocket.accept();
 			//	System.out.println("[" + socket.getInetAddress() + "]"
 			//			+  " " + socket.getPort() + "에서 접속했습니다.");
-				ServerManager thread = new ServerManager(socket,db);
+				ClientThreadManager thread = new ClientThreadManager(socket,db);
 				thread.start();
 			}
 		}
