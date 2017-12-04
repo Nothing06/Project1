@@ -17,11 +17,17 @@ import javax.swing.JTextField;
 enum EnumPerson{id,password,emp_no,name,age,tel};
 public  class NetworkLib {
 
-	public String serverIp = "172.30.1.46";
+	public String serverIp = "192.168.0.6";
 	public Socket socket;
 	public DataOutputStream out;
 	public DataInputStream in;
 	private String loginID;
+	
+	
+	
+	
+	
+	
 	public NetworkLib(String loginID)
 	{
 		try
@@ -168,6 +174,7 @@ public  class NetworkLib {
 						t=true;
 						break;
 					}
+					if(j==0)
 					JOptionPane.showInputDialog(tuple[j]);
 				//	JOptionPane.showInputDialog("H1");
 				}

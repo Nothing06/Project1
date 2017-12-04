@@ -35,8 +35,12 @@ import javax.swing.event.ListSelectionListener;
 
 class friendPanel extends JPanel implements ListSelectionListener, ActionListener{
 	JList friendlist;
-	Border border = BorderFactory.createTitledBorder("친구목록");
+	Border border;// = BorderFactory.createTitledBorder("친구목록");
+	JLabel welcomeLabel;
 	JScrollPane scroll = new JScrollPane();
+	Font welcomeLabelFont= new Font("Serif", Font.PLAIN, 20);
+	Font friendlistFont = new Font("돋움", Font.BOLD, 17);
+//new Font("바탕", Font.BOLD, 20);
 	JButton addFriendBtn = new JButton("친구추가");
 	JButton delFriendBtn = new JButton("친구삭제");
 	int friend_cnt = 0;
@@ -51,11 +55,18 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 	friendPanel(NetworkLib networkLib,String ID) {
 		this.networkLib = networkLib;
 		this.loginID = ID;
-		model = new DefaultListModel();
+		welcomeLabel = new JLabel(loginID + "님, weChat에 오신것을 환영합니다.");
+		welcomeLabel.setFont(welcomeLabelFont);
+		
+		model = new DefaultListModel<String>();
 		networkLib.loadfriendInfoFromServer(friendInfoTuple_list,model);
+		
 		friendlist = new JList(model);
 		friendlist.setFixedCellHeight(40);
 		friendlist.setFixedCellWidth(300);
+		friendlist.setFont(friendlistFont);
+		
+		
 		 MouseListener mouseListener = new MouseAdapter() {
 		      public void mouseClicked(MouseEvent mouseEvent) {
 		        JList list = (JList) mouseEvent.getSource();
@@ -77,8 +88,9 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 		    };
 
 		friendlist.addMouseListener(mouseListener);
-		friendlist.setPreferredSize(new Dimension(500, 550));
+		//friendlist.setPreferredSize(new Dimension(500, 550));
 		scroll.setViewportView(friendlist);
+		border = BorderFactory.createTitledBorder("친구목록" + "(" + friendInfoTuple_list.size() + ")");
 		scroll.setBorder(border); // 경계 설정
 		scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER); // 가로바정책
 		// list 셋팅
@@ -88,6 +100,7 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 		friendlist.addListSelectionListener(this); // 이벤트리스너 장착
 		addFriendBtn.addActionListener(this);
 		delFriendBtn.addActionListener(this);
+		add(welcomeLabel, BorderLayout.NORTH);
 		add(scroll, BorderLayout.CENTER);
 		add(addFriendBtn, BorderLayout.SOUTH);
 		setSize(400, 500);
@@ -154,6 +167,8 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 				{
 					model.addElement(friendInfoTuple[0]);
 					friendInfoTuple_list.add(friendInfoTuple);
+					border = BorderFactory.createTitledBorder("친구목록" + "(" + friendInfoTuple_list.size() + ")");
+					scroll.setBorder(border); // 경계 설정
 			//		friend_cnt += 1;
 				}
 			} else {

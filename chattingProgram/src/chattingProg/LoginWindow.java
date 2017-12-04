@@ -27,7 +27,7 @@ public class LoginWindow extends JFrame implements ActionListener {
 	JPanel img_panel;
 	ImageIcon loginImage;
 	JPanel info_panel;
-	NetworkLib networkLib;
+	NetworkLib networkLib=null;
 	// info_panel 내부 컨테이너들
 	JPanel input_panel;
 	JPanel button_panel;
@@ -41,12 +41,12 @@ public class LoginWindow extends JFrame implements ActionListener {
 	JButton regButton;
 	JPanel bottom_panel;
 	public String loginID;
-	String serverIp = "10.0.25.42";
+	String serverIp = "192.168.0.6";
 	registerDialog regDialog;
 	public registerContent regContent;
 
 	public LoginWindow() {
-		networkLib = new NetworkLib(loginID);
+		
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		makeImagePanel();
 		makeInfoPanel();
@@ -123,6 +123,8 @@ public class LoginWindow extends JFrame implements ActionListener {
 
 	public void actionPerformed(ActionEvent e) {
 
+		if(networkLib==null)
+			networkLib = new NetworkLib(loginID);
 		if (e.getSource() == loginButton) {
 		//	JOptionPane.showInputDialog("LoginWindow-ActionPerformed");
 			networkLib.loginProcess(this,  loginID_input, password_input);
