@@ -20,18 +20,19 @@ public class ClientThreadManager extends Thread{
 	DataInputStream in;
 	DataOutputStream out;
 	HashMap clients;
+	String clientID=null;
 	DB_Person db_person;
 	String ID="";   String password=""; 
 	String name="";  String age=""; String tel="";
 	String workspace = "C:\\Users\\user\\git\\Project1\\chattingProgram\\";
 	personTableField passwordField = personTableField.valueOf("password");
 	@SuppressWarnings("unchecked")
-	ClientThreadManager(Socket socket, DB_Person db_person)
+	ClientThreadManager(Socket socket, DB_Person db_person,HashMap clients)
 	{
 		this.socket =socket;
 		this.db_person = db_person;
-		clients = new HashMap();
-		Collections.synchronizedMap(clients);
+		this.clients = clients;
+	
 		try {
 			in = new DataInputStream(socket.getInputStream());
 			out = new DataOutputStream(socket.getOutputStream());
@@ -123,7 +124,12 @@ public class ClientThreadManager extends Thread{
 			sendLoginFlag(content); 
 			break;
 		case 'M':
-			sendChatMessage(content);
+			try {
+				deliverChatMessage(content);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			break;
 		case 'Q':
 			
@@ -144,6 +150,8 @@ public class ClientThreadManager extends Thread{
 			loginPassword = in.readUTF();
 			if(checkIfRegistered(db_person, loginID,loginPassword))
 			{
+				clientID = new String(loginID);
+				clients.put(clientID, out);
 				out.writeUTF("1");
 				System.out.println("login id: " + loginID);
 				System.out.println("login password: " + loginPassword);
@@ -340,9 +348,42 @@ public class ClientThreadManager extends Thread{
 			e1.printStackTrace();
 		}
 	}
-	private void sendChatMessage(String content)
+	int findDotIdx(String content, int dot_seq)
 	{
-		
+		int dot_cnt=0;
+		for(int i=0;i<content.length();i+=1)
+		{
+			if(content.charAt(i)=='.')
+			{
+				dot_cnt+=1;
+				if(dot_cnt== dot_seq)
+					return i;
+			}
+		}
+		return -1;
+	}
+	private void deliverChatMessage(String content) throws IOException
+	{
+		StringTokenizer tokenizer = new StringTokenizer(content,".");
+		String sender = tokenizer.nextToken();
+		String receiver = tokenizer.nextToken();
+		StringBuilder packet = new StringBuilder();
+		int	messageFirstIdx = findDotIdx(content, 2)+1;
+		String message = content.substring(messageFirstIdx, content.length());
+		DataOutputStream out;
+		out = (DataOutputStream)clients.get(receiver);
+
+		if(out == null)
+		{
+			//out.writeUTF("M" + sender +".이 로그인하지 않았습니다.");
+		}
+		else
+		{
+			packet.append("M");
+			packet.append(sender+".");
+			packet.append(message);
+			out.writeUTF(packet.toString()); //클라이언트대화창 , 클라이언트에서 메세지받을 작업 구현
+		}
 	}
 	public void run()
 	{

@@ -8,19 +8,13 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.WindowAdapter;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -28,7 +22,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -49,8 +45,9 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 	public String tupleInfo = null; 
 	String loginID;
 	NetworkLib networkLib;
-	ArrayList<JDialog> dialog_childs = new ArrayList<>();
+	ArrayList<JFrame> JFrame_childs = new ArrayList<>();
 	ArrayList<String[]> friendInfoTuple_list = new ArrayList<>();
+	HashMap<String,TalkDialog> talkList = new HashMap<>();
 	
 	friendPanel(NetworkLib networkLib,String ID) {
 		this.networkLib = networkLib;
@@ -67,19 +64,19 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 		friendlist.setFont(friendlistFont);
 		
 		
-		 MouseListener mouseListener = new MouseAdapter() {
+		 MouseListener friendlistListener = new MouseAdapter() {
 		      public void mouseClicked(MouseEvent mouseEvent) {
 		        JList list = (JList) mouseEvent.getSource();
 		        if (mouseEvent.getClickCount() == 2) {
 		          int index = list.locationToIndex(mouseEvent.getPoint());
 		          if (index >= 0) {
-		        	  if(dialog_childs.size() >= 1)
+		        	  if(JFrame_childs.size() >= 1)
 		        	  {
-		        		  dialog_childs.get(0).dispose();
-		        		  dialog_childs.remove(0);
+		        		  JFrame_childs.get(0).dispose();
+		        		  JFrame_childs.remove(0);
 		        	  }
-		  			friendInfoDialog f = new friendInfoDialog(friendInfoTuple_list.get(index));
-		  			dialog_childs.add(f);
+		  			friendInfoDialog f = new friendInfoDialog(friendInfoTuple_list.get(index), networkLib,talkList);
+		  			JFrame_childs.add(f);
 		  			
 		          }
 		          
@@ -87,7 +84,7 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 		      }
 		    };
 
-		friendlist.addMouseListener(mouseListener);
+		friendlist.addMouseListener(friendlistListener);
 		//friendlist.setPreferredSize(new Dimension(500, 550));
 		scroll.setViewportView(friendlist);
 		border = BorderFactory.createTitledBorder("친구목록" + "(" + friendInfoTuple_list.size() + ")");
@@ -220,6 +217,8 @@ public class mainMenu extends JFrame {
 //	public static Socket socket;
 	private String loginID;
 	NetworkLib networkLib;
+	
+	
 	public mainMenu(NetworkLib networkLib, String ID) {
 		loginID = ID;
 		this.networkLib = networkLib;
@@ -271,7 +270,7 @@ public class mainMenu extends JFrame {
 
 	
 }
-class friendInfoDialog extends JDialog implements ActionListener {
+class friendInfoDialog extends JFrame implements ActionListener {
 
 	JLabel ID_label;
 	JLabel name_label;
@@ -279,10 +278,15 @@ class friendInfoDialog extends JDialog implements ActionListener {
 	JLabel age_label;
 	JPanel friendInfoPanel = new JPanel();
 	JButton talkBtn;
+	NetworkLib networkLib;
 	Font f = new Font("바탕", Font.ITALIC, 25);
-	
-	friendInfoDialog(String[] friendInfoTuple)
+	String talkCompanion;
+	HashMap<String,TalkDialog> talkList;
+	friendInfoDialog(String[] friendInfoTuple, NetworkLib networkLib,HashMap<String,TalkDialog> talkList)
 	{
+		this.networkLib = networkLib;
+		this.talkList = talkList;
+		talkCompanion = friendInfoTuple[0];
 		friendInfoPanel.setLayout(new BoxLayout(friendInfoPanel, BoxLayout.Y_AXIS));
 		ID_label = new JLabel("아이디 : " + friendInfoTuple[0]);
 		ID_label.setFont(f);
@@ -304,9 +308,110 @@ class friendInfoDialog extends JDialog implements ActionListener {
 		setVisible(true);
 	}
 	@Override
-	public void actionPerformed(ActionEvent arg0) {
+	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
-		
+		if(e.getSource() == talkBtn)
+		{
+			
+			TalkDialog talkDialog=null;
+			
+			if(talkList.get(talkCompanion)==null)
+			{
+				this.dispose();
+				talkDialog = new TalkDialog(networkLib, talkCompanion);
+				talkList.put(talkCompanion, talkDialog);
+				
+			}
+			else
+			{
+				TalkDialog tmp  =  talkList.get(talkCompanion);
+				tmp.requestFocus();
+			}
+		}
 	}
 	
+}
+//2017.12.05  14시40분    TalkDialog 작성시작(오늘의  코딩시작)
+class TalkDialog extends JFrame implements ActionListener {
+	
+	JButton sendBtn;
+//	JTextArea messageArea;
+	JTextArea messageInput;
+	NetworkLib networkLib;
+	JScrollPane chatMessageScroll;
+	JScrollPane messageInput_scroll;
+	JPanel textPanel = new JPanel();
+	JPanel buttonPanel = new JPanel();
+	JPanel inputPanel = new JPanel();
+	Font textFont = new Font("돋움", Font.BOLD, 18);
+	String talkCompanion;
+	String messageString="";
+	JPanel chatMessagePanel = new JPanel();
+	ArrayList<JLabel> textlist = new ArrayList<>();
+	TalkDialog(NetworkLib networkLib,  String talkCompanion )
+	{
+		this.networkLib = networkLib;
+		this.talkCompanion = talkCompanion;
+	//	this.networkLib.openListeningService(talkCompanion);
+		
+		setLayout(new BorderLayout() );
+		
+		makeChatMessagePanel();
+		makeInputPanel();
+		
+		add(chatMessageScroll, BorderLayout.CENTER);
+		add(inputPanel, BorderLayout.SOUTH);
+		setSize(500,550);
+		setVisible(true);
+	}
+	void makeChatMessagePanel()
+	{
+		chatMessagePanel.setLayout(new BoxLayout(chatMessagePanel, BoxLayout.Y_AXIS));
+		messageString = "   *****  [" + talkCompanion + "]" + "님과의 대화시작   *****\n";
+		JLabel text = new JLabel(messageString);
+		text.setFont(textFont);
+		textlist.add(text);
+		chatMessagePanel.add(text);
+		chatMessageScroll = new JScrollPane(chatMessagePanel);
+	}
+	void makeInputPanel()
+	{
+		inputPanel.setLayout(new BorderLayout());
+		sendBtn = new JButton("Send");
+		sendBtn.addActionListener(this);
+		buttonPanel.add(sendBtn);
+		messageInput = new JTextArea();
+		messageInput_scroll = new JScrollPane(messageInput);
+		messageInput_scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER );
+		messageInput_scroll.setPreferredSize(new Dimension(300,50));
+		textPanel.add(messageInput_scroll);
+		inputPanel.add(textPanel, BorderLayout.CENTER);
+		inputPanel.add(buttonPanel, BorderLayout.EAST);
+	}
+	public void actionPerformed(ActionEvent e) {
+		// TODO Auto-generated method stub
+		if(e.getSource() == sendBtn)
+		{
+			String message = uploadInputMessage();
+			if(!message.equals(""))
+				networkLib.sendChatMessage(message,talkCompanion);
+		}
+	}
+	private String uploadInputMessage() {
+		String message = "Me: ";
+		if(messageInput.getText().equals(""))
+		{
+			return "";
+		}
+		message = message.concat( messageInput.getText()+"\n");
+		JLabel input = new JLabel(message);
+		input.setFont(textFont);
+		textlist.add(input);
+		chatMessagePanel.add(input);
+		chatMessagePanel.revalidate();
+		messageInput.setText("");
+		return message;
+	}
+	
+
 }
