@@ -8,6 +8,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -47,7 +49,7 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 	NetworkLib networkLib;
 	ArrayList<JFrame> JFrame_childs = new ArrayList<>();
 	ArrayList<String[]> friendInfoTuple_list = new ArrayList<>();
-	HashMap<String,TalkDialog> talkList = new HashMap<>();
+	HashMap<String,TalkWindow> talkList = new HashMap<>();
 	
 	friendPanel(NetworkLib networkLib,String ID) {
 		this.networkLib = networkLib;
@@ -281,8 +283,8 @@ class friendInfoDialog extends JFrame implements ActionListener {
 	NetworkLib networkLib;
 	Font f = new Font("바탕", Font.ITALIC, 25);
 	String talkCompanion;
-	HashMap<String,TalkDialog> talkList;
-	friendInfoDialog(String[] friendInfoTuple, NetworkLib networkLib,HashMap<String,TalkDialog> talkList)
+	HashMap<String,TalkWindow> talkList;
+	friendInfoDialog(String[] friendInfoTuple, NetworkLib networkLib,HashMap<String,TalkWindow> talkList)
 	{
 		this.networkLib = networkLib;
 		this.talkList = talkList;
@@ -313,18 +315,18 @@ class friendInfoDialog extends JFrame implements ActionListener {
 		if(e.getSource() == talkBtn)
 		{
 			
-			TalkDialog talkDialog=null;
+			TalkWindow talkDialog=null;
 			
 			if(talkList.get(talkCompanion)==null)
 			{
 				this.dispose();
-				talkDialog = new TalkDialog(networkLib, talkCompanion);
+				talkDialog = new TalkWindow(networkLib, talkCompanion, talkList);
 				talkList.put(talkCompanion, talkDialog);
 				
 			}
 			else
 			{
-				TalkDialog tmp  =  talkList.get(talkCompanion);
+				TalkWindow tmp  =  talkList.get(talkCompanion);
 				tmp.requestFocus();
 			}
 		}
@@ -332,7 +334,7 @@ class friendInfoDialog extends JFrame implements ActionListener {
 	
 }
 //2017.12.05  14시40분    TalkDialog 작성시작(오늘의  코딩시작)
-class TalkDialog extends JFrame implements ActionListener {
+class TalkWindow extends JFrame implements ActionListener {
 	
 	JButton sendBtn;
 //	JTextArea messageArea;
@@ -348,11 +350,30 @@ class TalkDialog extends JFrame implements ActionListener {
 	String messageString="";
 	JPanel chatMessagePanel = new JPanel();
 	ArrayList<JLabel> textlist = new ArrayList<>();
-	TalkDialog(NetworkLib networkLib,  String talkCompanion )
+	HashMap<String, TalkWindow> talkList;
+	WindowAdapter windowCloseEvent() {
+		return new java.awt.event.WindowAdapter() {
+			public void windowClosed(java.awt.event.WindowEvent evt) {
+				try {
+					talkList.remove(talkCompanion);
+					
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			
+				
+			}
+		};
+	}
+	TalkWindow(NetworkLib networkLib,  String talkCompanion , HashMap<String,TalkWindow> talkList)
 	{
 		this.networkLib = networkLib;
 		this.talkCompanion = talkCompanion;
+		this.talkList = talkList;
 	//	this.networkLib.openListeningService(talkCompanion);
+		java.awt.event.WindowAdapter windowAdapter = windowCloseEvent();
+		addWindowListener(windowAdapter);
 		
 		setLayout(new BorderLayout() );
 		

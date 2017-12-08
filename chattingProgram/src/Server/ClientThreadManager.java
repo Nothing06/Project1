@@ -115,7 +115,10 @@ public class ClientThreadManager extends Thread{
 			saveAndSendClientInfo(db_person, content);
 			break;
 		case 'C': // 회원한명의 등록된 각각의 친구정보들을 보내줌. 
-			sendOnesFriendInfo(content);
+			try {
+				sendClientFriendInfo(content);	}
+			catch (IOException e1) {
+				e1.printStackTrace();	}
 			break;
 		case 'D':  
 			joinMember();
@@ -183,14 +186,11 @@ public class ClientThreadManager extends Thread{
 		db_person.addNewMemberInfo(ID, password, "2009100224", name, age, tel);
 		createNewMemberFile(ID);
 	}
-	private void sendOnesFriendInfo(String clientID) {
+	void readClientFriendInfoFromStorage(ArrayList<String> clientFriendIDList)
+	{
 		BufferedReader reader;
 		String path;
 		String friendID;
-		ArrayList<String> friendID_list = new ArrayList<>();
-		int friendID_list_idx=0;
-		
-		System.out.println("* In sendOnesFriendInfo()");
 		path = new String(workspace);
 		path = path.concat(clientID);
 		path = path.concat("_Friends.txt");
@@ -207,13 +207,9 @@ public class ClientThreadManager extends Thread{
 				break;
 			else if(friendID.equals(""))
 				continue;
-			//friendID = friendID.substring(0, friendID.length()-1);
-			System.out.print(friendID + "//");
-			System.out.println("HereA" + friendID_list);
-			friendID_list.add(friendID);
+			clientFriendIDList.add(friendID);
 			}
-			System.out.println("HereA" + friendID_list);
-			Collections.sort(friendID_list, String.CASE_INSENSITIVE_ORDER);
+			Collections.sort(clientFriendIDList, String.CASE_INSENSITIVE_ORDER);
 		}
 		catch(Exception e)
 		{
@@ -222,66 +218,35 @@ public class ClientThreadManager extends Thread{
 		finally {
 			
 		}
-	
-	//	System.out.println("HereB" + friendID_list);
-		//	System.out.println("tuplecount: " + db_person.person_tuplecount);
-		if(friendID_list.size() > 0)
+	}
+	private void sendClientFriendInfo(String clientID) throws IOException {
+		ArrayList<String> clientFriendIDList = new ArrayList<>();
+		int friendID_list_idx=0;
+		StringBuilder clientFriendIDPkt = new StringBuilder();
+		
+		readClientFriendInfoFromStorage(clientFriendIDList);
+		clientFriendIDPkt.append("C");
+		if(clientFriendIDList.size() > 0)
 		{
-		for(int tuple_idx=0;tuple_idx<db_person.person_tuplecount;tuple_idx+=1)
-		{
-		//	System.out.println("tuple_idx: " + tuple_idx);
-		//	System.out.println("friendID_list.get(friendID_list_idx): " + friendID_list.get(friendID_list_idx));
-			if( db_person.personTable.get(tuple_idx)[0].equals(friendID_list.get(friendID_list_idx))) 		
+			for(int tuple_idx=0;tuple_idx<db_person.person_tuplecount;tuple_idx+=1)
 			{
-				System.out.println("friendID_list_idx: " + friendID_list_idx);
-				try 
+				if( db_person.personTable.get(tuple_idx)[0].equals(clientFriendIDList.get(friendID_list_idx))) 		
 				{
+				//	System.out.println("friendID_list_idx: " + friendID_list_idx);
 					for(int j=0;j<6;j+=1)
 					{
 						if(j==passwordField.ordinal())
 							continue;
-						out.writeUTF((String)db_person.personTable.get(tuple_idx)[j]);
+						//	out.writeUTF((String)db_person.personTable.get(tuple_idx)[j]);
+						clientFriendIDPkt.append((String)db_person.personTable.get(tuple_idx)[j] + ".");
 					}
-				}catch (IOException e) 
-				{	// TODO Auto-generated catch block
-					e.printStackTrace();
+					friendID_list_idx+=1;
+					if(clientFriendIDList.size() == friendID_list_idx)
+						break;
 				}
-				friendID_list_idx+=1;
-				if(friendID_list.size() == friendID_list_idx)
-					break;
 			}
 		}
-		}
-		System.out.println("here!!");
-		try {
-			out.writeUTF("#"); 
-		}
-		catch(Exception e) {}
-		finally{}// 다보냈다는 FLAG 신호
-		/*String path;
-		BufferedReader reader;
-		path = new String(workspace);
-		try {
-			path = path.concat(content);
-			path = path.concat("_Friends.txt");
-			System.out.println(content);
-			reader = new BufferedReader(new FileReader(path));
-	 
-			String line;
-			while(true)
-			{
-			line = reader.readLine();
-			if(line==null)
-			{
-				out.writeUTF(".");
-				break;
-			}//System.out.println(line);
-			out.writeUTF(line);
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace(); 
-		}*/
+		out.writeUTF(clientFriendIDPkt.toString());
 	}
 	private void saveAndSendClientInfo(DB_Person db_person, String tryingAddID) {
 		String clientID;

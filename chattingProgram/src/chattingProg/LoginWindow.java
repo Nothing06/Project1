@@ -127,7 +127,12 @@ public class LoginWindow extends JFrame implements ActionListener {
 			networkLib = new NetworkLib(loginID);
 		if (e.getSource() == loginButton) {
 		//	JOptionPane.showInputDialog("LoginWindow-ActionPerformed");
-			networkLib.loginProcess(this,  loginID_input, password_input);
+			loginID = loginID_input.getText();
+			if (loginID.equals("")) {
+				JOptionPane.showInputDialog("아이디를 입력해주세요");
+				return  ;
+			} 
+			networkLib.loginProcess(this,  loginID_input.getText(), password_input);
 		} else if (e.getSource() == regButton) {
 			registerProcess();
 		}

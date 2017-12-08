@@ -87,7 +87,7 @@ class chatInfo
 	int recv_cnt;
 	
 }
-public  class NetworkLib{
+public  class NetworkLib extends Thread{
 	
 	//private TalkingListener talkingListener;
 	public String serverIp =  "192.168.25.2";//"10.0.27.215";
@@ -220,7 +220,21 @@ public  class NetworkLib{
 				e.printStackTrace();
 			}
 		}
-		WindowAdapter getAdapter() {
+		
+	
+	void loginProcess(JFrame loginWindow,  String  loginID, JPasswordField password_input) {
+		boolean is_valid = try_login(loginID,password_input);
+		//JOptionPane.showInputDialog("here1");
+		if (is_valid == true) {
+			loginWindow.dispose();
+		
+			mainMenu fl = new mainMenu(this, loginID);
+		
+		} else {
+			JOptionPane.showInputDialog("Login failed.\n");
+		}
+	}
+	WindowAdapter getAdapter() {
 		return new java.awt.event.WindowAdapter() {
 			public void windowClosed(java.awt.event.WindowEvent evt) {
 				try {
@@ -240,27 +254,10 @@ public  class NetworkLib{
 			}
 		};
 	}
-	void loginProcess(JFrame loginWindow,  JTextField loginID_input, JPasswordField password_input) {
-		boolean is_valid = try_login(loginID_input,password_input);
-		//JOptionPane.showInputDialog("here1");
-		if (is_valid == true) {
-			loginWindow.dispose();
-		
-			mainMenu fl = new mainMenu(this, loginID);
-		
-		} else {
-			JOptionPane.showInputDialog("Login failed.\n");
-		}
-	}
-	boolean try_login(JTextField loginID_input, JPasswordField password_input) {
+	boolean try_login(String  loginID, JPasswordField password_input) {
 		boolean t = false;
 		try {
 			
-			loginID = loginID_input.getText();
-			if (loginID.equals("")) {
-				JOptionPane.showInputDialog("아이디를 입력해주세요");
-				return false;
-			} 
 		//JOptionPane.showInputDialog("here2");
 			sendLoginPacket(loginID, new String(password_input.getPassword()));
 	//	JOptionPane.showInputDialog("here3");
@@ -321,6 +318,11 @@ public  class NetworkLib{
 		
 		return clientExist;
 	}
+	
+	
+	
+	
+	
 	boolean loadfriendInfoFromServer(ArrayList<String[]> friendInfo_list, DefaultListModel dlm) {
 		boolean t = false;
 		String friendId = null;
@@ -328,12 +330,12 @@ public  class NetworkLib{
 		String[] tuple;
 		String message = null;
 		EnumPerson passwordField =  EnumPerson.valueOf("password");
-		JOptionPane.showInputDialog("H0");
+	//	JOptionPane.showInputDialog("H0");
 		try {
 			message = "C";
 			message = message.concat(loginID);
 			out.writeUTF(message);
-			JOptionPane.showInputDialog("H0");
+		//	JOptionPane.showInputDialog("H0");
 			while (true) {
 				//friendId = in.readUTF();
 				tuple = new String[6];
