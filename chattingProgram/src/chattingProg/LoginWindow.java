@@ -23,7 +23,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
-public class LoginWindow extends JFrame implements ActionListener {
+public class LoginWindow extends JFrame implements ActionListener{
 	JPanel img_panel;
 	ImageIcon loginImage;
 	JPanel info_panel;
@@ -41,12 +41,14 @@ public class LoginWindow extends JFrame implements ActionListener {
 	JButton regButton;
 	JPanel bottom_panel;
 	public String loginID;
+	String loginPassword;
 	String serverIp = "192.168.0.6";
 	registerDialog regDialog;
 	public registerContent regContent;
 
-	public LoginWindow() {
-		
+	public LoginWindow(NetworkLib networkLib) {
+		this.networkLib = networkLib;
+	//	networkLib.start();
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		makeImagePanel();
 		makeInfoPanel();
@@ -123,17 +125,32 @@ public class LoginWindow extends JFrame implements ActionListener {
 
 	public void actionPerformed(ActionEvent e) {
 
-		if(networkLib==null)
-			networkLib = new NetworkLib(loginID);
+		
+		
 		if (e.getSource() == loginButton) {
-		//	JOptionPane.showInputDialog("LoginWindow-ActionPerformed");
 			loginID = loginID_input.getText();
 			if (loginID.equals("")) {
 				JOptionPane.showInputDialog("아이디를 입력해주세요");
 				return  ;
 			} 
-			networkLib.loginProcess(this,  loginID_input.getText(), password_input);
-		} else if (e.getSource() == regButton) {
+			loginPassword = new String(password_input.getPassword());
+			JOptionPane.showInputDialog(loginPassword);
+			if(loginPassword.equals(""))
+			{
+				JOptionPane.showInputDialog("비밀번호를 입력해주세요");
+				return  ;
+			}
+			Application.networkLib.loginID= loginID;
+			Application.networkLib.start();
+			try {
+				Application.networkLib.sendLoginPacket(loginID, loginPassword);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		} 
+		else if (e.getSource() == regButton) {
+			networkLib.start();
 			registerProcess();
 		}
 	}
@@ -167,8 +184,7 @@ public class LoginWindow extends JFrame implements ActionListener {
 
 		return t;
 	}
-/*
-	boolean try_login() {
+/*boolean try_login() {
 		boolean t = false;
 		try {
 			serverIp = "10.0.25.42";
@@ -289,15 +305,10 @@ class registerDialog extends JDialog implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
 
-		
-	//	JOptionPane.showInputDialog("hereA");
-		JOptionPane.showInputDialog("hereA");
 		if(e.getSource() == regBtn)
 		{
-			JOptionPane.showInputDialog("hereB");
 			if(getJoinInputInfo_Ok())
 			{
-				JOptionPane.showInputDialog("hereC");
 				((LoginWindow) parent).sendJoinedMemberInfo();
 				this.dispose();
 			}

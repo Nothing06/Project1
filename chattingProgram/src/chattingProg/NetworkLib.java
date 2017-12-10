@@ -11,13 +11,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
 import javax.swing.DefaultListModel;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JPasswordField;
-import javax.swing.JTextField;
 enum EnumPerson{id,password,emp_no,name,age,tel};
 interface talkListener{
 	boolean listenAndPrint();
@@ -98,39 +96,37 @@ public  class NetworkLib extends Thread{
 	List<Thread> threadArr = new ArrayList<>();
 	String content;
 	HashMap<String,chatInfo> chatMessageInfo;
-	
+	LoginWindow loginWindow;
+	mainMenu mainMenu=null;
 	@SuppressWarnings("unchecked")
-	void extractContent(String packet)
+	void dispatchContent(String packet)
 	 {
 		 char packetType = packet.charAt(0);
-		
+		 boolean loginSuccess = false;
 		 String content=null;// String content 내용 패턴: "sender.chatMessage"
 		 content = packet.substring(1, packet.length());
-		 StringTokenizer st = new StringTokenizer(content, ".");
-		 String friendID = st.nextToken();
-		 String message = st.nextToken();
-		 
-		
-		
-	 }
-	void savePacketToList(String packet)
-	{
-		
-	}
-	 class clientReceiver extends Thread{
-		 @SuppressWarnings("unchecked")
-		clientReceiver(Socket socket)
+
+		 switch(packetType)
 		 {
-			 chatMessageInfo = new HashMap();
-			 Collections.synchronizedMap(chatMessageInfo);
-				try {
-					in = new DataInputStream(socket.getInputStream());
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+		 case 'M':
+			 break;
+		 case 'A':
+			 mainMenu.getFriendPanel().fillUpModelFromServer(content);
+			 break;
+		 case 'C':
+		//	 loadFriendInfoFromServer(content,mainMenu.getFriendPanel().getFriendInfoTuple_list(),
+		//			 				mainMenu.getFriendPanel().getDefaultListModel());;
+			 loadFriendInfoFromServer(content,mainMenu.getFriendPanel()
+									 				);;
+			break;
+		 case 'D':
+			 break;
+		 case 'L':
+			 loginSuccess = LoginResult(content);
+			 if(loginSuccess)sendLoginIDToGetFriendList();
+			 break;
 		 }
-		
+	 }
 		public void run()
 		{
 			String id=null;
@@ -145,12 +141,10 @@ public  class NetworkLib extends Thread{
 						}
 						catch(SocketException e)
 						{
-							System.out.println("클라이언트와의 연결을 종료합니다.");
-							break;
+							e.printStackTrace();
 						}
-						
-					//	System.out.println("Message: " + message);
-						extractContent(packet);
+		
+						dispatchContent(packet);
 					}
 			}
 			catch(Exception e) { e.printStackTrace();}
@@ -160,58 +154,15 @@ public  class NetworkLib extends Thread{
 			}
 			
 		}
-	}
-	/*class clientSender extends Thread{
-		clientSender(Socket socket)
-		{
-			try {
-				out = new DataOutputStream(socket.getOutputStream());
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		public void run()
-		{
-			String id=null;
-			String password=null;
-			String message=null;
-			
-			try {
-					while(out!=null)
-					{
-						try {
-						message = out.writeUTF();
-						}
-						catch(SocketException e)
-						{
-							System.out.println("클라이언트와의 연결을 종료합니다.");
-							break;
-						}
-						
-					//	System.out.println("Message: " + message);
-						decodePacket(message);
-					}
-			}
-			catch(Exception e) { e.printStackTrace();}
-			finally {
-				
-			
-			}
-			
-		}
-	}*/
-	public NetworkLib(String loginID)
+	public NetworkLib()
 	{
+
+	//	System.out.println("networkLib: loginID : " + this.loginID);
 		try
 		{
 			socket = new Socket(serverIp, 8000);
 			out = new DataOutputStream(socket.getOutputStream());
-//			in = new DataInputStream(socket.getInputStream());
-			
-			clientReceiver recvThread = new clientReceiver(socket);
-			
-		//	clientSender sendThread = new clientSender(socket);
+			in = new DataInputStream(socket.getInputStream());
 			}catch (UnknownHostException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -220,20 +171,21 @@ public  class NetworkLib extends Thread{
 				e.printStackTrace();
 			}
 		}
-		
-	
-	void loginProcess(JFrame loginWindow,  String  loginID, JPasswordField password_input) {
-		boolean is_valid = try_login(loginID,password_input);
-		//JOptionPane.showInputDialog("here1");
-		if (is_valid == true) {
+	boolean LoginResult(String content)
+	{
+		if(content.equals("1"))
+		{
+		//	System.out.println(loginWindow.networkLib);
+			mainMenu main = new mainMenu(Application.networkLib, loginID);
 			loginWindow.dispose();
-		
-			mainMenu fl = new mainMenu(this, loginID);
-		
-		} else {
-			JOptionPane.showInputDialog("Login failed.\n");
+			main.revalidate();
+			mainMenu = main;
+			return true;
 		}
+		JOptionPane.showInputDialog("Login failed.\n"); // failed.  0을 받았을때.
+		return false;
 	}
+	
 	WindowAdapter getAdapter() {
 		return new java.awt.event.WindowAdapter() {
 			public void windowClosed(java.awt.event.WindowEvent evt) {
@@ -254,14 +206,14 @@ public  class NetworkLib extends Thread{
 			}
 		};
 	}
-	boolean try_login(String  loginID, JPasswordField password_input) {
+/*	boolean try_login(String  loginID,String password_input) {
 		boolean t = false;
 		try {
 			
 		//JOptionPane.showInputDialog("here2");
-			sendLoginPacket(loginID, new String(password_input.getPassword()));
+			sendLoginPacket(loginID, (password_input));
 	//	JOptionPane.showInputDialog("here3");
-			String isvalid = in.readUTF(); // 0 or 1
+	/*		String isvalid = in.readUTF(); // 0 or 1
 		//	JOptionPane.showInputDialog("here4");
 			if (isvalid.equals("0")) {
 				// JOptionPane.showInputDialog(isvalid);
@@ -281,91 +233,88 @@ public  class NetworkLib extends Thread{
 		}
 
 		return t;
+	}*/
+	void sendLoginIDToGetFriendList()
+	{
+		StringBuilder message = new StringBuilder();
+		message.append("C");
+		message.append(loginID);
+	//	System.out.println(message);
+		try {
+			out.writeUTF(message.toString());
+		//	System.out.println("E");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
-	public void sendLoginPacket(String ID, String password) throws IOException {
-		String LoginPacket = "L";
-		out.writeUTF("L");
-		out.writeUTF(ID);
-		out.writeUTF(password);
-//		out.writeUTF("L");
-//		out.writeUTF(ID);
-//		out.writeUTF(new String(password.getPassword()));
+	public void sendLoginPacket(String ID, String password) throws IOException { //case L
+		StringBuilder LoginPacket = new StringBuilder();
+		this.loginID = ID;
+		LoginPacket.append("L");
+		LoginPacket.append(ID+".");
+		LoginPacket.append(password);
+		out.writeUTF(LoginPacket.toString());
 	}
-	public boolean getClientInfoFromServer(String loginID,String friendId,String[] tuple
-										) throws IOException {
-
-		boolean clientExist = true;
+	public void sendAddFriendPacketToServer(String loginID,String friendId,String[] tuple
+										) {
 		EnumPerson passwordField =  EnumPerson.valueOf("password");
 		String searchPacket = "A";
 		searchPacket = searchPacket.concat(friendId);
 		searchPacket = searchPacket.concat(".");
 		searchPacket = searchPacket.concat(loginID);
 
-		out.writeUTF(searchPacket); 
-		
-		for (int j = 0; j < 6; j += 1) {
-			if(j==(int)(passwordField.ordinal())) continue; // 
-			String searchIdInfo_attribute = in.readUTF();
-			
-			if (searchIdInfo_attribute.equals(".")) {
-				clientExist = false;
-			}
-			else
-			{
-				tuple[j] = searchIdInfo_attribute;
-			}
-		}
-		
-		return clientExist;
-	}
-	
-	
-	
-	
-	
-	boolean loadfriendInfoFromServer(ArrayList<String[]> friendInfo_list, DefaultListModel dlm) {
-		boolean t = false;
-		String friendId = null;
-		String attribute;
-		String[] tuple;
-		String message = null;
-		EnumPerson passwordField =  EnumPerson.valueOf("password");
-	//	JOptionPane.showInputDialog("H0");
 		try {
-			message = "C";
-			message = message.concat(loginID);
-			out.writeUTF(message);
-		//	JOptionPane.showInputDialog("H0");
-			while (true) {
-				//friendId = in.readUTF();
-				tuple = new String[6];
-				for(int j=0;j<6;j+=1)
-				{
-					if(j==passwordField.ordinal())
-						continue;
-				//	Scanner s = new Scanner(System.in);
-				//	s.nextLine();
-					tuple[j] = in.readUTF();
-					
-					if(tuple[j].equals("#"))
-					{
-						t=true;
-						break;
-					}
-					if(j==0)
-					JOptionPane.showInputDialog(tuple[j]);
-				//	JOptionPane.showInputDialog("H1");
-				}
-				if(t==true)
-					break;
-				dlm.addElement(tuple[0]);
-				friendInfo_list.add(tuple);
-			}
+			out.writeUTF(searchPacket);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} 
+	}
+	
+	void loadFriendInfoFromServer(String content, friendPanel fPanel//ArrayList<String[]> friendInfo_list, DefaultListModel dlm,
+											) {
+		
+		String friendId = null;
+		StringTokenizer friendListTokenizer = new StringTokenizer(content, ".");
+		String attribute;
+		boolean escape=false;
+		String[] tuple=null;
+		String message = null;
+		EnumPerson passwordField =  EnumPerson.valueOf("password");
+		ArrayList<String[]> friendInfo_list = fPanel.getFriendInfoTuple_list();
+		ArrayList<String> friendID_list = fPanel.getFriendID_list();
+		SortedListModel dlm = fPanel.getSortedListModel();
+		
+		try {
+				while(true)
+				{
+					tuple = new String[6];
+					for(int i=0;i<6;i+=1)
+					{
+						if(i==passwordField.ordinal())
+							continue;
+						try {
+						tuple[i] = friendListTokenizer.nextToken();
+						}
+						catch(NoSuchElementException e)
+						{
+							escape= true;
+							break;
+						}
+					}
+					if(escape == true)
+						break;
+					dlm.add(tuple[0]);
+					friendID_list.add(tuple[0]);
+					friendInfo_list.add(tuple);
+				}
+			}
+		 catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		return t;
+		mainMenu.getFriendPanel().setBorder();
 	}
 	
 	void sendChatMessage(String text, String talkCompanion)

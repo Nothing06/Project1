@@ -13,6 +13,7 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Scanner;
 import java.util.StringTokenizer;
 enum personTableField{id,password,emp_no,name,age,tel};
 public class ClientThreadManager extends Thread{
@@ -105,10 +106,10 @@ public class ClientThreadManager extends Thread{
 		String clientID = null;
 		String dbCommand =null;
 		
-		System.out.println("Here1");
+		//System.out.println("Here1");
 		String loginID="";
 		String loginPassword="";
-
+		System.out.println("packet: " + packet);
 		switch(packet.charAt(0))
 		{
 		case 'A': // 친구아이디찾기기능  통신  // content : ID
@@ -116,7 +117,8 @@ public class ClientThreadManager extends Thread{
 			break;
 		case 'C': // 회원한명의 등록된 각각의 친구정보들을 보내줌. 
 			try {
-				sendClientFriendInfo(content);	}
+			//	System.out.println("reply case C:");
+				sendClientFriendListInfo(content);	}
 			catch (IOException e1) {
 				e1.printStackTrace();	}
 			break;
@@ -124,6 +126,7 @@ public class ClientThreadManager extends Thread{
 			joinMember();
 			break;
 		case 'L':
+		//	System.out.println("reply() :: case L : " + content);
 			sendLoginFlag(content); 
 			break;
 		case 'M':
@@ -148,24 +151,27 @@ public class ClientThreadManager extends Thread{
 	private void sendLoginFlag(String content) {
 		String loginID;
 		String loginPassword;
+		StringTokenizer loginContent = new StringTokenizer(content, ".");
 		try {
-			loginID = in.readUTF();
-			loginPassword = in.readUTF();
+			loginID = loginContent.nextToken(); System.out.println("LoginID: " + loginID);
+			loginPassword = loginContent.nextToken(); System.out.println("LoginPassword: " + loginPassword);
 			if(checkIfRegistered(db_person, loginID,loginPassword))
 			{
 				clientID = new String(loginID);
 				clients.put(clientID, out);
-				out.writeUTF("1");
+				out.writeUTF("L1");
 				System.out.println("login id: " + loginID);
 				System.out.println("login password: " + loginPassword);
 				System.out.println("sent login success flag.");
 			}
 			else
 			{
-				out.writeUTF("0");
+				out.writeUTF("L0");
 				//in.close();
 				//out.close();
 			}
+		//	Scanner s = new Scanner(System.in);
+		//	s.nextLine();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -219,13 +225,15 @@ public class ClientThreadManager extends Thread{
 			
 		}
 	}
-	private void sendClientFriendInfo(String clientID) throws IOException {
+	private void sendClientFriendListInfo(String clientID) throws IOException {  // case C
+		// 한고객의 모든친구들의 각각 튜플내용 다 보내주기(패스워드제외)
 		ArrayList<String> clientFriendIDList = new ArrayList<>();
 		int friendID_list_idx=0;
-		StringBuilder clientFriendIDPkt = new StringBuilder();
+		StringBuilder clientFriendListInfoPkt = new StringBuilder();
 		
-		readClientFriendInfoFromStorage(clientFriendIDList);
-		clientFriendIDPkt.append("C");
+		readClientFriendInfoFromStorage(clientFriendIDList); // 파일에 있는 한 고객의 친구 아이디를 전부 읽어
+																//ArrayList::clientFriendIDList에 저장.
+		clientFriendListInfoPkt.append("C");
 		if(clientFriendIDList.size() > 0)
 		{
 			for(int tuple_idx=0;tuple_idx<db_person.person_tuplecount;tuple_idx+=1)
@@ -238,7 +246,7 @@ public class ClientThreadManager extends Thread{
 						if(j==passwordField.ordinal())
 							continue;
 						//	out.writeUTF((String)db_person.personTable.get(tuple_idx)[j]);
-						clientFriendIDPkt.append((String)db_person.personTable.get(tuple_idx)[j] + ".");
+						clientFriendListInfoPkt.append((String)db_person.personTable.get(tuple_idx)[j] + ".");
 					}
 					friendID_list_idx+=1;
 					if(clientFriendIDList.size() == friendID_list_idx)
@@ -246,48 +254,55 @@ public class ClientThreadManager extends Thread{
 				}
 			}
 		}
-		out.writeUTF(clientFriendIDPkt.toString());
+		//System.out.println(clientFriendListInfoPkt.toString());
+		out.writeUTF(clientFriendListInfoPkt.toString());
 	}
-	private void saveAndSendClientInfo(DB_Person db_person, String tryingAddID) {
+	private void saveAndSendClientInfo(DB_Person db_person, String tryingAddID) { // case A
 		String clientID;
 		boolean idfound=false;
 		StringTokenizer st = new StringTokenizer(tryingAddID,".");
-		
+		StringBuilder friendInfo = new StringBuilder();
 		System.out.println("tryingAddID: " + tryingAddID);
 		tryingAddID = st.nextToken();
 		System.out.println("tryingAddID: " + tryingAddID);
 		clientID = st.nextToken();
 
+		friendInfo.append("A");
 		for(int tuple_idx=0;tuple_idx<db_person.person_tuplecount;tuple_idx+=1)
 		{
 			if(db_person.personTable.get(tuple_idx)[0].equals(tryingAddID))
 			{
 				idfound = true;
 				saveTryingAddIDTo_clientIDtxt(clientID,tryingAddID);
-				try {
+				
 					for(int j=0;j<6;j+=1)
 					{
 						if(j==passwordField.ordinal())
 							continue;
-						out.writeUTF((String)db_person.personTable.get(tuple_idx)[j]);
+						friendInfo.append((String)db_person.personTable.get(tuple_idx)[j] + ".");
+					//	out.writeUTF((String)db_person.personTable.get(tuple_idx)[j]);
 					}
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				
 				break;
 			}
 		}
-		if(idfound== false)
+		if(idfound== true)
 		{
-			for(int j=0;j<6;j+=1)
-				try {
-					if(j==1) continue;
-					out.writeUTF(".");
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+			try {
+				out.writeUTF(friendInfo.toString());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		else if(idfound== false)
+		{
+			try {
+				out.writeUTF("A.....");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 	private void saveTryingAddIDTo_clientIDtxt( String clientID,String tryingAddID) {
@@ -361,10 +376,12 @@ public class ClientThreadManager extends Thread{
 				{
 					try {
 					message = in.readUTF();
+					System.out.println("* Server message: " + message);
 					}
 					catch(SocketException e)
 					{
-						System.out.println("클라이언트와의 연결을 종료합니다.");
+					//	e.printStackTrace();
+						System.out.println(clientID + "님의  서버와의 연결을 종료.");
 						break;
 					}
 					
