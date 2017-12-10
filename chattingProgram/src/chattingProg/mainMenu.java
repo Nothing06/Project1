@@ -495,6 +495,7 @@ class TalkWindow extends JFrame implements ActionListener {
 		add(inputPanel, BorderLayout.SOUTH);
 		setSize(500,550);
 		setVisible(true);
+		networkLib.addTalkWindow(talkCompanion, this);
 	}
 	void makeChatMessagePanel()
 	{
@@ -529,14 +530,23 @@ class TalkWindow extends JFrame implements ActionListener {
 				networkLib.sendChatMessage(message,talkCompanion);
 		}
 	}
-	private String uploadInputMessage() {
-		String message = "Me: ";
+	void deliverNewMessage(String message)
+	{
+		JLabel input = new JLabel("["+talkCompanion + "] "+ message);
+		input.setFont(textFont);
+		textlist.add(input);
+		chatMessagePanel.add(input);
+		chatMessagePanel.revalidate();
+	}
+	String uploadInputMessage() {
+		String message = "";
+		String me = "Me: ";
 		if(messageInput.getText().equals(""))
 		{
 			return "";
 		}
 		message = message.concat( messageInput.getText()+"\n");
-		JLabel input = new JLabel(message);
+		JLabel input = new JLabel(me + message);
 		input.setFont(textFont);
 		textlist.add(input);
 		chatMessagePanel.add(input);

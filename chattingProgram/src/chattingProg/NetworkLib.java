@@ -96,6 +96,7 @@ public  class NetworkLib extends Thread{
 	List<Thread> threadArr = new ArrayList<>();
 	String content;
 	HashMap<String,chatInfo> chatMessageInfo;
+	HashMap<String,TalkWindow> talkingMap = new HashMap();
 	LoginWindow loginWindow;
 	mainMenu mainMenu=null;
 	@SuppressWarnings("unchecked")
@@ -109,6 +110,7 @@ public  class NetworkLib extends Thread{
 		 switch(packetType)
 		 {
 		 case 'M':
+			 deliverMessageToTalkWindow(content);
 			 break;
 		 case 'A':
 			 mainMenu.getFriendPanel().fillUpModelFromServer(content);
@@ -127,6 +129,33 @@ public  class NetworkLib extends Thread{
 			 break;
 		 }
 	 }
+	int findDotIdx(String content, int dot_seq)
+	{
+		int dot_cnt=0;
+		for(int i=0;i<content.length();i+=1)
+		{
+			if(content.charAt(i)=='.')
+			{
+				dot_cnt+=1;
+				if(dot_cnt== dot_seq)
+					return i;
+			}
+		}
+		return -1;
+	}
+	void deliverMessageToTalkWindow(String content)
+	{
+		StringTokenizer tokenizer = new StringTokenizer(content, ".");
+		String talkTo = tokenizer.nextToken();
+		int startIdx = findDotIdx(content,1);
+		String message = content.substring(startIdx+1, content.length());
+		
+		talkingMap.get(talkTo).deliverNewMessage(message);
+	}
+	void addTalkWindow(String friendID,TalkWindow talkWindow)
+	{
+		talkingMap.put(friendID, talkWindow);
+	}
 		public void run()
 		{
 			String id=null;
@@ -176,7 +205,7 @@ public  class NetworkLib extends Thread{
 		if(content.equals("1"))
 		{
 		//	System.out.println(loginWindow.networkLib);
-			mainMenu main = new mainMenu(Application.networkLib, loginID);
+			mainMenu main = new mainMenu(this, loginID);
 			loginWindow.dispose();
 			main.revalidate();
 			mainMenu = main;

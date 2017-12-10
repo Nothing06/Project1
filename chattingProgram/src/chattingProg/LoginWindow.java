@@ -140,10 +140,10 @@ public class LoginWindow extends JFrame implements ActionListener{
 				JOptionPane.showInputDialog("비밀번호를 입력해주세요");
 				return  ;
 			}
-			Application.networkLib.loginID= loginID;
-			Application.networkLib.start();
+			networkLib.loginID= loginID;
+			networkLib.start();
 			try {
-				Application.networkLib.sendLoginPacket(loginID, loginPassword);
+				networkLib.sendLoginPacket(loginID, loginPassword);
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
