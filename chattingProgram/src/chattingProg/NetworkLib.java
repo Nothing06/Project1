@@ -3,18 +3,18 @@ package chattingProg;
 import java.awt.event.WindowAdapter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
-import javax.swing.DefaultListModel;
 import javax.swing.JOptionPane;
 enum EnumPerson{id,password,emp_no,name,age,tel};
 interface talkListener{
@@ -123,6 +123,9 @@ public  class NetworkLib extends Thread{
 			break;
 		 case 'D':
 			 break;
+		 case 'F':
+			 recvFile();
+			 break;
 		 case 'L':
 			 loginSuccess = LoginResult(content);
 			 if(loginSuccess)sendLoginIDToGetFriendList();
@@ -151,6 +154,38 @@ public  class NetworkLib extends Thread{
 		String message = content.substring(startIdx+1, content.length());
 		
 		talkingMap.get(talkTo).deliverNewMessage(message);
+	}
+	void recvFile(String packet)
+	{
+		
+	}
+	void sendFile(String filePath, String senderID, String receiverID)
+	{
+		 FileInputStream fileInputStream = null;
+	        byte[] bytesArray = null;
+
+	        try {
+
+	            File file = new File(filePath);
+	            bytesArray = new byte[(int) file.length()];
+	            bytesArray[0] = 'F';
+	            //read file into bytes[]
+	            fileInputStream = new FileInputStream(file);
+	            fileInputStream.read(bytesArray, 1, (int) file.length());
+	            out.write(bytesArray, 0, bytesArray.length);
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        } finally {
+	            if (fileInputStream != null) {
+	                try {
+	                    fileInputStream.close();
+	                } catch (IOException e) {
+	                    e.printStackTrace();
+	                }
+	            }
+
+	        }
+
 	}
 	void addTalkWindow(String friendID,TalkWindow talkWindow)
 	{

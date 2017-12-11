@@ -9,15 +9,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
@@ -27,6 +23,7 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -40,6 +37,7 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 class SortedListModel extends AbstractListModel {
 	  SortedSet<String> model;
 
@@ -390,6 +388,7 @@ class friendInfoDialog extends JFrame implements ActionListener {
 	JLabel age_label;
 	JPanel friendInfoPanel = new JPanel();
 	JButton talkBtn;
+	JButton sendFileBtn;
 	NetworkLib networkLib;
 	Font f = new Font("바탕", Font.ITALIC, 25);
 	String talkCompanion;
@@ -410,12 +409,14 @@ class friendInfoDialog extends JFrame implements ActionListener {
 		tel_label = new JLabel("전화번호: " + friendInfoTuple[5]);
 		tel_label.setFont(f);
 		talkBtn = new JButton("대화하기");
+		sendFileBtn = new JButton("파일전송");
 		friendInfoPanel.add(ID_label);
 		friendInfoPanel.add(name_label);
 		friendInfoPanel.add(age_label);
 		friendInfoPanel.add(tel_label);
 		friendInfoPanel.add(talkBtn);
 		talkBtn.addActionListener(this);
+		sendFileBtn.addActionListener(this);
 		getContentPane().add(friendInfoPanel);
 		setSize(400,400);
 		setVisible(true);
@@ -440,6 +441,19 @@ class friendInfoDialog extends JFrame implements ActionListener {
 				TalkWindow tmp  =  talkList.get(talkCompanion);
 				tmp.requestFocus();
 			}
+		}
+		else if(e.getSource() == sendFileBtn)
+		{
+			 JFileChooser chooser = new JFileChooser();
+             FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                 "JPG & GIF Images", "jpg", "gif");  //description,......확장자
+            chooser.setFileFilter(filter);    //필터 셋팅
+            int returnVal = chooser.showOpenDialog(this);
+             if(returnVal == JFileChooser.APPROVE_OPTION) {
+                System.out.println("You chose to open this file: " +
+                     chooser.getSelectedFile(). getName());
+             }
+             networkLib.sendFile(chooser.getSelectedFile().getAbsolutePath());
 		}
 	}
 	
