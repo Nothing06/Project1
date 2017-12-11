@@ -88,7 +88,7 @@ class chatInfo
 public  class NetworkLib extends Thread{
 	
 	//private TalkingListener talkingListener;
-	public String serverIp =  "192.168.25.2";//"10.0.27.215";
+	public String serverIp =  "192.168.0.83";//"192.168.25.2";//"10.0.27.215";
 	public Socket socket;
 	public DataOutputStream out;
 	public DataInputStream in;
@@ -183,10 +183,13 @@ public  class NetworkLib extends Thread{
 			}
 			
 		}
+		public NetworkLib(LoginWindow loginWindow)
+		{
+			this();
+			this.loginWindow = loginWindow;
+		}
 	public NetworkLib()
 	{
-
-	//	System.out.println("networkLib: loginID : " + this.loginID);
 		try
 		{
 			socket = new Socket(serverIp, 8000);
@@ -204,9 +207,9 @@ public  class NetworkLib extends Thread{
 	{
 		if(content.equals("1"))
 		{
-		//	System.out.println(loginWindow.networkLib);
 			mainMenu main = new mainMenu(this, loginID);
 			loginWindow.dispose();
+			
 			main.revalidate();
 			mainMenu = main;
 			return true;

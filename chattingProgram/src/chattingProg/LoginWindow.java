@@ -48,6 +48,7 @@ public class LoginWindow extends JFrame implements ActionListener{
 
 	public LoginWindow(NetworkLib networkLib) {
 		this.networkLib = networkLib;
+		this.networkLib.loginWindow = this;
 	//	networkLib.start();
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		makeImagePanel();
