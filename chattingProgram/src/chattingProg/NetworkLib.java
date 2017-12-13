@@ -17,6 +17,8 @@ import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
 import javax.swing.JOptionPane;
+
+import mainMenu.friendPanel;
 enum EnumPerson{id,password,emp_no,name,age,tel};
 interface talkListener{
 	boolean listenAndPrint();

@@ -1,6 +1,7 @@
 package chattingProg;
 
 import java.awt.BorderLayout;
+
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -38,6 +39,9 @@ import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
+import mainMenu.friendPanel;
+/*
 class SortedListModel extends AbstractListModel {
 	  SortedSet<String> model;
 
@@ -91,7 +95,7 @@ class SortedListModel extends AbstractListModel {
 	  }
 	}
 
-
+/*
 class friendPanel extends JPanel implements ListSelectionListener, ActionListener{
 	JList friendlist;
 	Border border;// = BorderFactory.createTitledBorder("模备格废");
@@ -285,7 +289,7 @@ class friendPanel extends JPanel implements ListSelectionListener, ActionListene
 	
 	
 
-}
+}*/
 
 class chattingPanel extends JPanel {
 	JList chatlist;
@@ -314,7 +318,7 @@ public class mainMenu extends JFrame {
 	JLabel friend;
 	JLabel chatting;
 	JLabel setting;
-	JPanel friendPanel;
+	friendPanel friendPanel;
 	JPanel chattingPanel;
 	JPanel settingPanel;
 	// public static Thread sender = new Thread(new clientSender());
@@ -347,7 +351,7 @@ public class mainMenu extends JFrame {
 	}
 	public friendPanel getFriendPanel()
 	{
-		return (chattingProg.friendPanel) this.friendPanel;
+		return this.friendPanel;
 	}
 	private void buildTab() {
 		tabPane.addTab("模备", friendPanel);
