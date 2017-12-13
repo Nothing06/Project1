@@ -114,7 +114,6 @@ public  class NetworkLib extends Thread{
 	void dispatchContent(String packet)
 	 {
 		 char packetType = packet.charAt(0);
-		 boolean loginSuccess = false;
 		 String content=null;// String content 내용 패턴: "sender.chatMessage"
 		 content = packet.substring(1, packet.length());
 
@@ -124,13 +123,15 @@ public  class NetworkLib extends Thread{
 			 deliverMessageToTalkWindow(content);
 			 break;
 		 case 'A':
-			 mainMenu.getFriendTab().addFriendToModel(content);
+			 String[] friendInfoTuple = new String[6];
+			 boolean idFound = checkIfIDFound(content, friendInfoTuple);
+			 if(idFound == true)
+				 mainMenu.getFriendTab().addFriendToList(friendInfoTuple);
+			 else
+				 JOptionPane.showConfirmDialog(mainMenu, "검색하신 ID는 등록되지 않은 ID입니다.");
 			 break;
 		 case 'C':
-		//	 loadFriendInfoFromServer(content,mainMenu.getFriendPanel().getFriendInfoTuple_list(),
-		//			 				mainMenu.getFriendPanel().getDefaultListModel());;
-			 loadFriendInfoFromServer(content,mainMenu.getFriendTab()
-									 				);;
+			 loadFriendInfoFromServer(content,mainMenu.getFriendTab());
 			break;
 		 case 'D':
 			 break;
@@ -138,11 +139,33 @@ public  class NetworkLib extends Thread{
 			// recvFile();
 			 break;
 		 case 'L':
-			 loginSuccess = LoginResult(content);
+			 boolean loginSuccess = LoginResult(content);
 			 if(loginSuccess)sendLoginIDToGetFriendList();
 			 break;
 		 }
 	 }
+	boolean checkIfIDFound(String content, String[] friendInfoTuple)
+	{
+		StringTokenizer friendContent = new StringTokenizer(content, ".");
+		String attribute=null;
+		boolean idFound = true;
+		for(int i=0;i<6;i+=1)
+		{
+			if(i==1)//passwordField skip
+				continue;
+			try {
+				friendInfoTuple[i] = friendContent.nextToken();
+				
+			}
+			catch(NoSuchElementException e)
+			{
+				idFound = false;
+				break;
+			}
+			
+		}
+		return idFound;
+	}
 	int findDotIdx(String content, int dot_seq)
 	{
 		int dot_cnt=0;
@@ -223,6 +246,8 @@ public  class NetworkLib extends Thread{
 						catch(SocketException e)
 						{
 							e.printStackTrace();
+							JOptionPane.showInputDialog("서버와의 연결이 끊겼습니다.");
+							break;
 						}
 		
 						dispatchContent(packet);
