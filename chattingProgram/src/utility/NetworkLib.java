@@ -27,65 +27,6 @@ enum EnumPerson{id,password,emp_no,name,age,tel};
 interface talkListener{
 	boolean listenAndPrint();
 }
-/*
-class TalkingListener implements Runnable{
-	public DataOutputStream out;
-	public DataInputStream in;
-	String packet=null;
-	
-	
-	TalkingListener(Socket socket)
-	{
-		//this.out = out;
-		//this.in = in;
-		try {
-			this.out = new DataOutputStream(socket.getOutputStream());
-			this.in = new DataInputStream(socket.getInputStream());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-	}
-	@Override
-	public void run() {
-		// TODO Auto-generated method stub
-		while(in!=null)
-		{
-			try {
-				packet = in.readUTF();
-				receive(packet);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	}
-	int findDotIdx(String content, int dot_seq)
-	{
-		int dot_cnt=0;
-		for(int i=0;i<content.length();i+=1)
-		{
-			if(content.charAt(i)=='.')
-			{
-				dot_cnt+=1;
-				if(dot_cnt== dot_seq)
-					return i;
-			}
-		}
-		return -1;
-	}
-	public void receive(String packet)
-	{
-		StringTokenizer tokenizer = new StringTokenizer(packet,".");
-		String from = tokenizer.nextToken();
-		String me = tokenizer.nextToken();
-		int	messageFirstIdx = findDotIdx(packet, 2)+1;
-		String message = packet.substring(messageFirstIdx, packet.length());
-		
-		
-	}
-}*/
 class chatInfo
 {
 	ArrayList<String> chatMessages = new ArrayList<String>();
