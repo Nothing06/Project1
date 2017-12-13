@@ -453,7 +453,7 @@ class friendInfoDialog extends JFrame implements ActionListener {
                 System.out.println("You chose to open this file: " +
                      chooser.getSelectedFile(). getName());
              }
-             networkLib.sendFile(chooser.getSelectedFile().getAbsolutePath());
+             networkLib.sendFile(chooser.getSelectedFile().getAbsolutePath(),talkCompanion);
 		}
 	}
 	

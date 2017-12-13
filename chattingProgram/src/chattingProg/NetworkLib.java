@@ -6,6 +6,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -159,20 +160,25 @@ public  class NetworkLib extends Thread{
 	{
 		
 	}
-	void sendFile(String filePath, String senderID, String receiverID)
+	void sendFile(String filePath, String receiverID)
 	{
 		 FileInputStream fileInputStream = null;
-	        byte[] bytesArray = null;
-
+	        StringBuilder filePacket = new StringBuilder();
+	        byte[] fileContent;
+	        
+	        filePacket.append("F");
+            filePacket.append(loginID+".");
+            filePacket.append(receiverID + ".");
+            
 	        try {
-
-	            File file = new File(filePath);
-	            bytesArray = new byte[(int) file.length()];
-	            bytesArray[0] = 'F';
-	            //read file into bytes[]
+	            File file = new File(filePath);    
+	            fileContent = new byte[(int)file.length()];	
 	            fileInputStream = new FileInputStream(file);
-	            fileInputStream.read(bytesArray, 1, (int) file.length());
-	            out.write(bytesArray, 0, bytesArray.length);
+	            
+	            fileInputStream.read(fileContent);
+	            filePacket.append(fileContent.toString());
+	            out.writeUTF(filePacket.toString());
+	   //         out.write(fileContent, 0, bytesArray.length);
 	        } catch (IOException e) {
 	            e.printStackTrace();
 	        } finally {
@@ -187,6 +193,7 @@ public  class NetworkLib extends Thread{
 	        }
 
 	}
+	
 	void addTalkWindow(String friendID,TalkWindow talkWindow)
 	{
 		talkingMap.put(friendID, talkWindow);
