@@ -112,7 +112,7 @@ public class MainMenu extends JFrame {
 	//	System.out.println("buildPanel()::loginID : " + loginID);
 		friendPanel = new FriendTab(networkLib, loginID);
 		chattingPanel = new chattingPanel(networkLib, loginID);
-		settingPanel = new SettingPanel();
+		settingPanel = new SettingPanel(networkLib, loginID);
 		friendPanel.setPreferredSize(new Dimension(250, 50));
 		chattingPanel.setPreferredSize(new Dimension(150, 50));
 		settingPanel.setPreferredSize(new Dimension(150, 50));
