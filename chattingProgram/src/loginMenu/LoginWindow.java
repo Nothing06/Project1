@@ -1,4 +1,4 @@
-package chattingProg;
+package loginMenu;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -23,6 +23,9 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
+import utility.InputChecker;
+import utility.NetworkLib;
+
 public class LoginWindow extends JFrame implements ActionListener{
 	JPanel img_panel;
 	ImageIcon loginImage;
@@ -43,12 +46,12 @@ public class LoginWindow extends JFrame implements ActionListener{
 	public String loginID;
 	String loginPassword;
 	String serverIp = "192.168.0.6";
-	registerDialog regDialog;
-	public registerContent regContent;
+	RegDialog regDialog;
+	RegContent regContent;
 
 	public LoginWindow(NetworkLib networkLib) {
 		this.networkLib = networkLib;
-		this.networkLib.loginWindow = this;
+		this.networkLib.includeLoginWindow(this);
 	//	networkLib.start();
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		makeImagePanel();
@@ -118,8 +121,8 @@ public class LoginWindow extends JFrame implements ActionListener{
 
 	void registerProcess() {
 		// JOptionPane.showInputDialog
-		regContent = new registerContent();
-		regDialog = new registerDialog(this, regContent, "회원가입");
+		regContent = new RegContent();
+		regDialog = new RegDialog(this, regContent, "회원가입");
 		regDialog.setVisible(true);
 		// sendRegisteredClientInfo();
 	}
@@ -223,14 +226,9 @@ public class LoginWindow extends JFrame implements ActionListener{
 
 }
 
-class registerContent {
-	String regID;
-	String regPassword;
-	String name;
-	String age;
-	String tel;
-}
 
+
+/*
 class registerDialog extends JDialog implements ActionListener {
 	JPanel reg_input;
 	JPanel[] items = new JPanel[6];
@@ -316,4 +314,4 @@ class registerDialog extends JDialog implements ActionListener {
 		}
 		
 	}
-}
+}*/

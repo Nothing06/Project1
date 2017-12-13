@@ -1,6 +1,7 @@
-package chattingProg;
+package utility;
 
 import java.awt.event.WindowAdapter;
+import mainMenu.MainMenu;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -18,7 +19,10 @@ import java.util.StringTokenizer;
 
 import javax.swing.JOptionPane;
 
-import mainMenu.friendPanel;
+import loginMenu.LoginWindow;
+import mainMenu.TalkWindow;
+import mainMenu.FriendPanel;
+import mainMenu.MainMenu;
 enum EnumPerson{id,password,emp_no,name,age,tel};
 interface talkListener{
 	boolean listenAndPrint();
@@ -91,7 +95,7 @@ class chatInfo
 public  class NetworkLib extends Thread{
 	
 	//private TalkingListener talkingListener;
-	public String serverIp =  "192.168.0.83";//"192.168.25.2";//"10.0.27.215";
+	public String serverIp =  "192.168.0.6";//"192.168.25.2";//"10.0.27.215";
 	public Socket socket;
 	public DataOutputStream out;
 	public DataInputStream in;
@@ -101,8 +105,12 @@ public  class NetworkLib extends Thread{
 	HashMap<String,chatInfo> chatMessageInfo;
 	HashMap<String,TalkWindow> talkingMap = new HashMap();
 	LoginWindow loginWindow;
-	mainMenu mainMenu=null;
+	MainMenu mainMenu=null;
 	@SuppressWarnings("unchecked")
+	public void includeLoginWindow(LoginWindow loginWindow)
+	{
+		this.loginWindow = loginWindow;
+	}
 	void dispatchContent(String packet)
 	 {
 		 char packetType = packet.charAt(0);
@@ -127,7 +135,7 @@ public  class NetworkLib extends Thread{
 		 case 'D':
 			 break;
 		 case 'F':
-			 recvFile();
+			// recvFile();
 			 break;
 		 case 'L':
 			 loginSuccess = LoginResult(content);
@@ -162,7 +170,7 @@ public  class NetworkLib extends Thread{
 	{
 		
 	}
-	void sendFile(String filePath, String receiverID)
+	public void sendFile(String filePath, String receiverID)
 	{
 		 FileInputStream fileInputStream = null;
 	        StringBuilder filePacket = new StringBuilder();
@@ -196,7 +204,7 @@ public  class NetworkLib extends Thread{
 
 	}
 	
-	void addTalkWindow(String friendID,TalkWindow talkWindow)
+	public void addTalkWindow(String friendID,TalkWindow talkWindow)
 	{
 		talkingMap.put(friendID, talkWindow);
 	}
@@ -251,7 +259,7 @@ public  class NetworkLib extends Thread{
 	{
 		if(content.equals("1"))
 		{
-			mainMenu main = new mainMenu(this, loginID);
+			MainMenu main = new MainMenu(this, loginID);
 			loginWindow.dispose();
 			
 			main.revalidate();
@@ -262,7 +270,7 @@ public  class NetworkLib extends Thread{
 		return false;
 	}
 	
-	WindowAdapter getAdapter() {
+	public WindowAdapter getAdapter() {
 		return new java.awt.event.WindowAdapter() {
 			public void windowClosed(java.awt.event.WindowEvent evt) {
 				try {
@@ -348,7 +356,7 @@ public  class NetworkLib extends Thread{
 		} 
 	}
 	
-	void loadFriendInfoFromServer(String content, friendPanel fPanel//ArrayList<String[]> friendInfo_list, DefaultListModel dlm,
+	void loadFriendInfoFromServer(String content, FriendPanel fPanel//ArrayList<String[]> friendInfo_list, DefaultListModel dlm,
 											) {
 		
 		String friendId = null;
@@ -393,7 +401,7 @@ public  class NetworkLib extends Thread{
 		mainMenu.getFriendPanel().setBorder();
 	}
 	
-	void sendChatMessage(String text, String talkCompanion)
+	public void sendChatMessage(String text, String talkCompanion)
 	{
 		String packet = "M";
 		packet = packet.concat(loginID+".");

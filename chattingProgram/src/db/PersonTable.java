@@ -1,4 +1,4 @@
-package Server;
+package db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -11,20 +11,20 @@ import javax.swing.JTable;
 
 import com.mysql.jdbc.Statement;
 
-public class DB_Person{
+public class PersonTable{
 
 	public ArrayList<String[]> personTable =new ArrayList<String[]>();
 	//public static DefaultTableModel model;
 	public ArrayList<String[]> chatContentTable= new ArrayList<String[]>();
 	public JTable table;
-	int person_tuplecount=0;
+	public int person_tuplecount=0;
 	int chatContent_tuplecount=0;
 	String[] data;
 	Connection con;
 	PreparedStatement pstmt=null;
 	ResultSet rs=null;
 	String str[] = {"id","password","emp_no", "이름", "나이", "전화번호"};
-	public DB_Person()
+	public PersonTable()
 	{
 	//	model = new DefaultTableModel(customerList,str);
 	//	table = new JTable(model);
@@ -115,7 +115,7 @@ public class DB_Person{
 			System.out.println("rs: "+ rs);
 			while(rs.next())
 			{
-				loadTablePerson();
+				loadTablePerson(rs);
 			}
 		}
 		catch(Exception e)
@@ -145,7 +145,7 @@ public class DB_Person{
 	//	System.out.println(id + ", " + password + ", "+ emp_no + ", " + name + ", " + age + ", " + tel);
 	}
 
-	private void loadTablePerson() throws SQLException {
+	private void loadTablePerson(ResultSet rs) throws SQLException { // ResultSet 인자 추가
 		String id = rs.getString("id");
 		String password = rs.getString("password");
 		int emp_no = rs.getInt("emp_no");

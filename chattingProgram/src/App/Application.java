@@ -1,4 +1,7 @@
-package chattingProg;
+package App;
+
+import loginMenu.LoginWindow;
+import utility.NetworkLib;
 
 public class Application {
 

@@ -1,4 +1,4 @@
-package chattingProg;
+package utility;
 
 public class InputChecker {
 	private String ID;
@@ -11,7 +11,7 @@ public class InputChecker {
 	{
 		
 	}
-	boolean checkID(String ID)
+	public boolean checkID(String ID)
 	{
 		boolean t = true;
 		int len = ID.length();
@@ -28,30 +28,30 @@ public class InputChecker {
 		}
 		return t;
 	}
-	boolean checkPassword(String password)
+	public boolean checkPassword(String password)
 	{
 		if(password.length() <= 6)
 			return false;
 		return true;
 	}
-	boolean checkName(String name)
+	public boolean checkName(String name)
 	{
 		if(name.length() <= 1)
 			return false;
 		return true;
 	}
-	boolean checkAge(String age)
+	public boolean checkAge(String age)
 	{
 		int n = Integer.valueOf(age);
 		if(n<1)
 			return false;
 		return true;
 	}
-	boolean isdigit(char c)
+	public boolean isdigit(char c)
 	{
 		return c>='0' && c<='9';
 	}
-	boolean checkPhoneNumber(String phoneNum)
+	public boolean checkPhoneNumber(String phoneNum)
 	{
 		int i=0;
 		int len = phoneNum.length();

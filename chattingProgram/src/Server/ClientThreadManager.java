@@ -15,6 +15,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.util.StringTokenizer;
+
+import db.PersonTable;
 enum personTableField{id,password,emp_no,name,age,tel};
 public class ClientThreadManager extends Thread{
 	Socket socket;
@@ -22,13 +24,13 @@ public class ClientThreadManager extends Thread{
 	DataOutputStream out;
 	HashMap clients;
 	String clientID=null;
-	DB_Person db_person;
+	PersonTable db_person;
 	String ID="";   String password=""; 
 	String name="";  String age=""; String tel="";
 	String workspace = "C:\\Users\\user\\git\\Project1\\chattingProgram\\";
 	personTableField passwordField = personTableField.valueOf("password");
 	@SuppressWarnings("unchecked")
-	ClientThreadManager(Socket socket, DB_Person db_person,HashMap clients)
+	ClientThreadManager(Socket socket, PersonTable db_person,HashMap clients)
 	{
 		this.socket =socket;
 		this.db_person = db_person;
@@ -43,7 +45,7 @@ public class ClientThreadManager extends Thread{
 			
 		}
 	}
-	boolean checkIfRegistered(DB_Person db_person, String id, String password)
+	boolean checkIfRegistered(PersonTable db_person, String id, String password)
 	{
 		String tuple_id;
 		String tuple_password;
@@ -257,7 +259,7 @@ public class ClientThreadManager extends Thread{
 		//System.out.println(clientFriendListInfoPkt.toString());
 		out.writeUTF(clientFriendListInfoPkt.toString());
 	}
-	private void saveAndSendClientInfo(DB_Person db_person, String tryingAddID) { // case A
+	private void saveAndSendClientInfo(PersonTable db_person, String tryingAddID) { // case A
 		String clientID;
 		boolean idfound=false;
 		StringTokenizer st = new StringTokenizer(tryingAddID,".");

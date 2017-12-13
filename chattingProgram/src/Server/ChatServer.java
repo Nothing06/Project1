@@ -5,14 +5,16 @@ import java.net.Socket;
 import java.util.Collections;
 import java.util.HashMap;
 
-public class chatServer {
-	public DB_Person db;
+import db.PersonTable;
+
+public class ChatServer {
+	public PersonTable db;
 	HashMap clients;
 	public void serverLoop()
 	{
 		ServerSocket serverSocket = null;
 		Socket socket = null;
-		db = new DB_Person();	
+		db = new PersonTable();	
 		clients = new HashMap();
 		Collections.synchronizedMap(clients);
 		try
@@ -34,7 +36,7 @@ public class chatServer {
 	}
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		new chatServer().serverLoop();
+		new ChatServer().serverLoop();
 	}
 	
 	

@@ -1,10 +1,10 @@
-package chattingProg;
+package mainMenu;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-public class Settings extends JPanel{
+public class SettingPanel extends JPanel{
 	
 	JLabel myProfile;
 	JLabel myID;
@@ -14,8 +14,8 @@ public class Settings extends JPanel{
 	JButton editBtn;
 	JPanel myProfilePanel;
 	JPanel myInfoPanel;
-	Settings()
+	public SettingPanel()
 	{
-		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+	//	setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 	}
 }
