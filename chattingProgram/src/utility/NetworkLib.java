@@ -2,6 +2,8 @@ package utility;
 
 import java.awt.event.WindowAdapter;
 import mainMenu.MainMenu;
+import mainMenu.SettingPanel;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -26,7 +28,7 @@ import mainMenu.MainMenu;
 enum EnumPerson{id,password,emp_no,name,age,tel};
 interface talkListener{
 	boolean listenAndPrint();
-}
+} 
 class chatInfo
 {
 	ArrayList<String> chatMessages = new ArrayList<String>();
@@ -71,9 +73,12 @@ public  class NetworkLib extends Thread{
 			 else
 				 JOptionPane.showConfirmDialog(mainMenu, "검색하신 ID는 등록되지 않은 ID입니다.");
 			 break;
+		 case 'B':
+			 loadMyInfoFromServer(content, mainMenu.getSettingTab());
+			 break;
 		 case 'C':
 			 loadFriendInfoFromServer(content,mainMenu.getFriendTab());
-			break;
+			 break;
 		 case 'D':
 			 break;
 		 case 'F':
@@ -306,8 +311,7 @@ public  class NetworkLib extends Thread{
 		LoginPacket.append(password);
 		out.writeUTF(LoginPacket.toString());
 	}
-	public void sendAddFriendPacketToServer(String loginID,String friendId,String[] tuple
-										) {
+	public void sendAddFriendPacketToServer(String loginID,String friendId) {
 		EnumPerson passwordField =  EnumPerson.valueOf("password");
 		String searchPacket = "A";
 		searchPacket = searchPacket.concat(friendId);
@@ -319,6 +323,20 @@ public  class NetworkLib extends Thread{
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} 
+	}
+	public void sendMyIDPacketToServer(String loginID) {
+		EnumPerson passwordField =  EnumPerson.valueOf("password");
+		String searchPacket = "B";
+		//searchPacket = searchPacket.concat(friendId);
+		searchPacket = searchPacket.concat(".");
+		searchPacket = searchPacket.concat(loginID);
+		
+		try {
+		out.writeUTF(searchPacket);
+		} catch (IOException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
 		} 
 	}
 	
@@ -366,7 +384,10 @@ public  class NetworkLib extends Thread{
 		}
 		mainMenu.getFriendTab().setBorder();
 	}
-	
+	void loadMyInfoFromServer(String content, SettingPanel settingPanel)
+	{
+		
+	}
 	public void sendChatMessage(String text, String talkCompanion)
 	{
 		String packet = "M";

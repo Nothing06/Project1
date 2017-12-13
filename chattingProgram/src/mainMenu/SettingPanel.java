@@ -25,6 +25,7 @@ public class SettingPanel extends JPanel{
 	{
 		this.networkLib = networkLib;
 		this.loginID = loginID;
+		networkLib.sendMyIDPacketToServer(loginID);
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		makeTopPanel();
 		makeInfoPanel();
@@ -41,5 +42,6 @@ public class SettingPanel extends JPanel{
 	void makeInfoPanel()
 	{
 	//	myName = new JLabel("¿Ã∏ß : " + )
+		
 	}
 }

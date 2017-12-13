@@ -67,8 +67,8 @@ public class MainMenu extends JFrame {
 	JLabel chatting;
 	JLabel setting;
 	FriendTab friendPanel;
+	SettingPanel settingPanel;
 	JPanel chattingPanel;
-	JPanel settingPanel;
 	// public static Thread sender = new Thread(new clientSender());
 	// public static Thread receiver = new Thread(new clientReceiver());
 //	public static Socket socket;
@@ -101,6 +101,10 @@ public class MainMenu extends JFrame {
 	{
 		return this.friendPanel;
 	}
+	public SettingPanel getSettingTab()
+	{
+		return this.settingPanel;
+	}
 	private void buildTab() {
 		tabPane.addTab("친구", friendPanel);
 		tabPane.addTab("채팅", chattingPanel);
@@ -132,196 +136,3 @@ public class MainMenu extends JFrame {
 
 	
 }
-/*
-class friendInfoDialog extends JFrame implements ActionListener {
-
-	JLabel ID_label;
-	JLabel name_label;
-	JLabel tel_label;
-	JLabel age_label;
-	JPanel friendInfoPanel = new JPanel();
-	JButton talkBtn;
-	JButton sendFileBtn;
-	NetworkLib networkLib;
-	Font f = new Font("바탕", Font.ITALIC, 25);
-	String talkCompanion;
-	HashMap<String,TalkWindow> talkList;
-	friendInfoDialog(String[] friendInfoTuple, NetworkLib networkLib, 
-			HashMap<String,TalkWindow> talkList, ArrayList<String> friendID_list)
-	{
-		this.networkLib = networkLib;
-		this.talkList = talkList;
-		talkCompanion = friendInfoTuple[0];
-		friendInfoPanel.setLayout(new BoxLayout(friendInfoPanel, BoxLayout.Y_AXIS));
-		ID_label = new JLabel("아이디 : " + friendInfoTuple[0]);
-		ID_label.setFont(f);
-		name_label = new JLabel("이름 : " + friendInfoTuple[3]);
-		name_label.setFont(f);
-		age_label = new JLabel("나이 : " + friendInfoTuple[4]);
-		age_label.setFont(f);
-		tel_label = new JLabel("전화번호: " + friendInfoTuple[5]);
-		tel_label.setFont(f);
-		talkBtn = new JButton("대화하기");
-		sendFileBtn = new JButton("파일전송");
-		friendInfoPanel.add(ID_label);
-		friendInfoPanel.add(name_label);
-		friendInfoPanel.add(age_label);
-		friendInfoPanel.add(tel_label);
-		friendInfoPanel.add(talkBtn);
-		talkBtn.addActionListener(this);
-		sendFileBtn.addActionListener(this);
-		getContentPane().add(friendInfoPanel);
-		setSize(400,400);
-		setVisible(true);
-	}
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
-		if(e.getSource() == talkBtn)
-		{
-			
-			TalkWindow talkDialog=null;
-			
-			if(talkList.get(talkCompanion)==null)
-			{
-				this.dispose();
-				talkDialog = new TalkWindow(networkLib, talkCompanion, talkList);
-				talkList.put(talkCompanion, talkDialog);
-				
-			}
-			else
-			{
-				TalkWindow tmp  =  talkList.get(talkCompanion);
-				tmp.requestFocus();
-			}
-		}
-		else if(e.getSource() == sendFileBtn)
-		{
-			 JFileChooser chooser = new JFileChooser();
-             FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                 "JPG & GIF Images", "jpg", "gif");  //description,......확장자
-            chooser.setFileFilter(filter);    //필터 셋팅
-            int returnVal = chooser.showOpenDialog(this);
-             if(returnVal == JFileChooser.APPROVE_OPTION) {
-                System.out.println("You chose to open this file: " +
-                     chooser.getSelectedFile(). getName());
-             }
-             networkLib.sendFile(chooser.getSelectedFile().getAbsolutePath(),talkCompanion);
-		}
-	}
-	
-}*/
-/*
-//2017.12.05  14시40분    TalkDialog 작성시작(오늘의  코딩시작)
-class TalkWindow extends JFrame implements ActionListener {
-	
-	JButton sendBtn;
-//	JTextArea messageArea;
-	JTextArea messageInput;
-	NetworkLib networkLib;
-	JScrollPane chatMessageScroll;
-	JScrollPane messageInput_scroll;
-	JPanel textPanel = new JPanel();
-	JPanel buttonPanel = new JPanel();
-	JPanel inputPanel = new JPanel();
-	Font textFont = new Font("돋움", Font.BOLD, 18);
-	String talkCompanion;
-	String messageString="";
-	JPanel chatMessagePanel = new JPanel();
-	ArrayList<JLabel> textlist = new ArrayList<>();
-	HashMap<String, TalkWindow> talkList;
-	WindowAdapter windowCloseEvent() {
-		return new java.awt.event.WindowAdapter() {
-			public void windowClosed(java.awt.event.WindowEvent evt) {
-				try {
-					talkList.remove(talkCompanion);
-					
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			
-				
-			}
-		};
-	}
-	TalkWindow(NetworkLib networkLib,  String talkCompanion , HashMap<String,TalkWindow> talkList)
-	{
-		this.networkLib = networkLib;
-		this.talkCompanion = talkCompanion;
-		this.talkList = talkList;
-	//	this.networkLib.openListeningService(talkCompanion);
-		java.awt.event.WindowAdapter windowAdapter = windowCloseEvent();
-		addWindowListener(windowAdapter);
-		
-		setLayout(new BorderLayout() );
-		
-		makeChatMessagePanel();
-		makeInputPanel();
-		
-		add(chatMessageScroll, BorderLayout.CENTER);
-		add(inputPanel, BorderLayout.SOUTH);
-		setSize(500,550);
-		setVisible(true);
-		networkLib.addTalkWindow(talkCompanion, this);
-	}
-	void makeChatMessagePanel()
-	{
-		chatMessagePanel.setLayout(new BoxLayout(chatMessagePanel, BoxLayout.Y_AXIS));
-		messageString = "   *****  [" + talkCompanion + "]" + "님과의 대화시작   *****\n";
-		JLabel text = new JLabel(messageString);
-		text.setFont(textFont);
-		textlist.add(text);
-		chatMessagePanel.add(text);
-		chatMessageScroll = new JScrollPane(chatMessagePanel);
-	}
-	void makeInputPanel()
-	{
-		inputPanel.setLayout(new BorderLayout());
-		sendBtn = new JButton("Send");
-		sendBtn.addActionListener(this);
-		buttonPanel.add(sendBtn);
-		messageInput = new JTextArea();
-		messageInput_scroll = new JScrollPane(messageInput);
-		messageInput_scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER );
-		messageInput_scroll.setPreferredSize(new Dimension(300,50));
-		textPanel.add(messageInput_scroll);
-		inputPanel.add(textPanel, BorderLayout.CENTER);
-		inputPanel.add(buttonPanel, BorderLayout.EAST);
-	}
-	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
-		if(e.getSource() == sendBtn)
-		{
-			String message = uploadInputMessage();
-			if(!message.equals(""))
-				networkLib.sendChatMessage(message,talkCompanion);
-		}
-	}
-	void deliverNewMessage(String message)
-	{
-		JLabel input = new JLabel("["+talkCompanion + "] "+ message);
-		input.setFont(textFont);
-		textlist.add(input);
-		chatMessagePanel.add(input);
-		chatMessagePanel.revalidate();
-	}
-	String uploadInputMessage() {
-		String message = "";
-		String me = "Me: ";
-		if(messageInput.getText().equals(""))
-		{
-			return "";
-		}
-		message = message.concat( messageInput.getText()+"\n");
-		JLabel input = new JLabel(me + message);
-		input.setFont(textFont);
-		textlist.add(input);
-		chatMessagePanel.add(input);
-		chatMessagePanel.revalidate();
-		messageInput.setText("");
-		return message;
-	}
-	
-
-}*/

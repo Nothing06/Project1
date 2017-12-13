@@ -169,7 +169,7 @@ public class FriendTab extends JPanel implements ListSelectionListener, ActionLi
 				return;
 			}
 		
-			networkLib.sendAddFriendPacketToServer(loginID,searchingID,friendInfoTuple);
+			networkLib.sendAddFriendPacketToServer(loginID,searchingID);
 			// System.out.println(friendId);
 		//	fillUpModelFromServer( friendId);
 		}
