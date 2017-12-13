@@ -66,7 +66,7 @@ public class MainMenu extends JFrame {
 	JLabel friend;
 	JLabel chatting;
 	JLabel setting;
-	FriendPanel friendPanel;
+	FriendTab friendPanel;
 	JPanel chattingPanel;
 	JPanel settingPanel;
 	// public static Thread sender = new Thread(new clientSender());
@@ -97,7 +97,7 @@ public class MainMenu extends JFrame {
 		
 
 	}
-	public FriendPanel getFriendPanel()
+	public FriendTab getFriendTab()
 	{
 		return this.friendPanel;
 	}
@@ -110,7 +110,7 @@ public class MainMenu extends JFrame {
 
 	private void buildPanel() {
 	//	System.out.println("buildPanel()::loginID : " + loginID);
-		friendPanel = new FriendPanel(networkLib, loginID);
+		friendPanel = new FriendTab(networkLib, loginID);
 		chattingPanel = new chattingPanel(networkLib, loginID);
 		settingPanel = new SettingPanel();
 		friendPanel.setPreferredSize(new Dimension(250, 50));

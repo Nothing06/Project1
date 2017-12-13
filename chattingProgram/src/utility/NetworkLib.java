@@ -21,7 +21,7 @@ import javax.swing.JOptionPane;
 
 import loginMenu.LoginWindow;
 import mainMenu.TalkWindow;
-import mainMenu.FriendPanel;
+import mainMenu.FriendTab;
 import mainMenu.MainMenu;
 enum EnumPerson{id,password,emp_no,name,age,tel};
 interface talkListener{
@@ -124,12 +124,12 @@ public  class NetworkLib extends Thread{
 			 deliverMessageToTalkWindow(content);
 			 break;
 		 case 'A':
-			 mainMenu.getFriendPanel().fillUpModelFromServer(content);
+			 mainMenu.getFriendTab().addFriendToModel(content);
 			 break;
 		 case 'C':
 		//	 loadFriendInfoFromServer(content,mainMenu.getFriendPanel().getFriendInfoTuple_list(),
 		//			 				mainMenu.getFriendPanel().getDefaultListModel());;
-			 loadFriendInfoFromServer(content,mainMenu.getFriendPanel()
+			 loadFriendInfoFromServer(content,mainMenu.getFriendTab()
 									 				);;
 			break;
 		 case 'D':
@@ -356,7 +356,7 @@ public  class NetworkLib extends Thread{
 		} 
 	}
 	
-	void loadFriendInfoFromServer(String content, FriendPanel fPanel//ArrayList<String[]> friendInfo_list, DefaultListModel dlm,
+	void loadFriendInfoFromServer(String content, FriendTab fPanel//ArrayList<String[]> friendInfo_list, DefaultListModel dlm,
 											) {
 		
 		String friendId = null;
@@ -398,7 +398,7 @@ public  class NetworkLib extends Thread{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		mainMenu.getFriendPanel().setBorder();
+		mainMenu.getFriendTab().setBorder();
 	}
 	
 	public void sendChatMessage(String text, String talkCompanion)
