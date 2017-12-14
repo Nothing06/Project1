@@ -1,15 +1,11 @@
 package utility;
 
 import java.awt.event.WindowAdapter;
-import mainMenu.MainMenu;
-import mainMenu.SettingPanel;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -19,12 +15,14 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
 import loginMenu.LoginWindow;
-import mainMenu.TalkWindow;
 import mainMenu.FriendTab;
 import mainMenu.MainMenu;
+import mainMenu.SettingTab;
+import mainMenu.TalkWindow;
 enum EnumPerson{id,password,emp_no,name,age,tel};
 interface talkListener{
 	boolean listenAndPrint();
@@ -34,6 +32,15 @@ class chatInfo
 	ArrayList<String> chatMessages = new ArrayList<String>();
 	int recv_cnt;
 	
+}
+final class Packet {
+	static final char addFriend = 'A';
+	static final char getUserInfo = 'B';
+	static final char getFriendInfo = 'C';
+	static final char joinMember = 'D';
+	static final char sendFile = 'F';
+	static final char login = 'L';
+	static final char sendChatMessage = 'M';
 }
 public  class NetworkLib extends Thread{
 	
@@ -62,10 +69,10 @@ public  class NetworkLib extends Thread{
 
 		 switch(packetType)
 		 {
-		 case 'M':
+		 case Packet.sendChatMessage:
 			 deliverMessageToTalkWindow(content);
 			 break;
-		 case 'A':
+		 case Packet.addFriend:
 			 String[] friendInfoTuple = new String[6];
 			 boolean idFound = checkIfIDFound(content, friendInfoTuple);
 			 if(idFound == true)
@@ -73,18 +80,18 @@ public  class NetworkLib extends Thread{
 			 else
 				 JOptionPane.showConfirmDialog(mainMenu, "검색하신 ID는 등록되지 않은 ID입니다.");
 			 break;
-		 case 'B':
+		 case Packet.getUserInfo:
 			 loadMyInfoFromServer(content, mainMenu.getSettingTab());
 			 break;
-		 case 'C':
+		 case Packet.getFriendInfo:
 			 loadFriendInfoFromServer(content,mainMenu.getFriendTab());
 			 break;
-		 case 'D':
+		 case Packet.joinMember:
 			 break;
-		 case 'F':
+		 case Packet.sendFile:
 			// recvFile();
 			 break;
-		 case 'L':
+		 case Packet.login:
 			 boolean loginSuccess = LoginResult(content);
 			 if(loginSuccess)sendLoginIDToGetFriendList();
 			 break;
@@ -325,7 +332,7 @@ public  class NetworkLib extends Thread{
 			e.printStackTrace();
 		} 
 	}
-	public void sendMyIDPacketToServer(String loginID) {
+	public void sendMyIDPacketToGetMyInfo(String loginID) {
 		EnumPerson passwordField =  EnumPerson.valueOf("password");
 		String searchPacket = "B";
 		//searchPacket = searchPacket.concat(friendId);
@@ -384,9 +391,34 @@ public  class NetworkLib extends Thread{
 		}
 		mainMenu.getFriendTab().setBorder();
 	}
-	void loadMyInfoFromServer(String content, SettingPanel settingPanel)
+	void loadMyInfoFromServer(String content, SettingTab settingTab)
 	{
+		StringTokenizer packetTokenizer = new StringTokenizer(content, ".");
+		String[] myInfo = new String[6];
 		
+		for(int i=0;i<6;i+=1)
+		{
+			myInfo[i] = packetTokenizer.nextToken();
+		}
+		fillSettingTabContent(myInfo);
+	}
+	void fillSettingTabContent(String[] myInfo)
+	{
+		JLabel[] myInfoLabel = new JLabel[6];
+		SettingTab settingTab = mainMenu.getSettingTab();
+		String src;
+		
+		myInfoLabel[3] = settingTab.getNameLabel();
+		src = myInfoLabel[3].getText();
+		myInfoLabel[3].setText(src + myInfo[3]);
+		
+		myInfoLabel[4] = settingTab.getAgeLabel();
+		src = myInfoLabel[4].getText();
+		myInfoLabel[4].setText(src + myInfo[4]);
+		
+		myInfoLabel[5] = settingTab.getPhoneNumLabel();
+		src = myInfoLabel[5].getText();
+		myInfoLabel[5].setText(src + myInfo[5]);
 	}
 	public void sendChatMessage(String text, String talkCompanion)
 	{

@@ -66,9 +66,9 @@ public class MainMenu extends JFrame {
 	JLabel friend;
 	JLabel chatting;
 	JLabel setting;
-	FriendTab friendPanel;
-	SettingPanel settingPanel;
-	JPanel chattingPanel;
+	FriendTab friendTab;
+	SettingTab settingTab;
+	JPanel chattingTab;
 	// public static Thread sender = new Thread(new clientSender());
 	// public static Thread receiver = new Thread(new clientReceiver());
 //	public static Socket socket;
@@ -99,27 +99,27 @@ public class MainMenu extends JFrame {
 	}
 	public FriendTab getFriendTab()
 	{
-		return this.friendPanel;
+		return this.friendTab;
 	}
-	public SettingPanel getSettingTab()
+	public SettingTab getSettingTab()
 	{
-		return this.settingPanel;
+		return this.settingTab;
 	}
 	private void buildTab() {
-		tabPane.addTab("친구", friendPanel);
-		tabPane.addTab("채팅", chattingPanel);
-		tabPane.addTab("설정", settingPanel);
+		tabPane.addTab("친구", friendTab);
+		tabPane.addTab("채팅", chattingTab);
+		tabPane.addTab("설정", settingTab);
 		add(tabPane);
 	}
 
 	private void buildPanel() {
 	//	System.out.println("buildPanel()::loginID : " + loginID);
-		friendPanel = new FriendTab(networkLib, loginID);
-		chattingPanel = new chattingPanel(networkLib, loginID);
-		settingPanel = new SettingPanel(networkLib, loginID);
-		friendPanel.setPreferredSize(new Dimension(250, 50));
-		chattingPanel.setPreferredSize(new Dimension(150, 50));
-		settingPanel.setPreferredSize(new Dimension(150, 50));
+		friendTab = new FriendTab(networkLib, loginID);
+		chattingTab = new chattingPanel(networkLib, loginID);
+		settingTab = new SettingTab(networkLib, loginID);
+		friendTab.setPreferredSize(new Dimension(250, 50));
+		chattingTab.setPreferredSize(new Dimension(150, 50));
+		settingTab.setPreferredSize(new Dimension(250, 50));
 		// friendPanel.add(friend);
 		// chattingPanel.add(chatting);
 		// settingPanel.add(setting);

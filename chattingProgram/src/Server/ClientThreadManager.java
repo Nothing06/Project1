@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.util.StringTokenizer;
-
+import Server.Packet;
 import db.PersonTable;
 enum personTableField{id,password,emp_no,name,age,tel};
 public class ClientThreadManager extends Thread{
@@ -29,6 +29,7 @@ public class ClientThreadManager extends Thread{
 	String name="";  String age=""; String tel="";
 	String workspace = "C:\\Users\\user\\git\\Project1\\chattingProgram\\";
 	personTableField passwordField = personTableField.valueOf("password");
+	
 	@SuppressWarnings("unchecked")
 	ClientThreadManager(Socket socket, PersonTable db_person,HashMap clients)
 	{
@@ -114,24 +115,27 @@ public class ClientThreadManager extends Thread{
 		System.out.println("packet: " + packet);
 		switch(packet.charAt(0))
 		{
-		case 'A': // 친구아이디찾기기능  통신  // content : ID
+		case Packet.addFriend: // 친구아이디찾기기능  통신  // content : ID
 			saveAndSendClientInfo(db_person, content);
 			break;
-		case 'C': // 회원한명의 등록된 각각의 친구정보들을 보내줌. 
+		case Packet.getUserInfo:
+			sendUserInfo(content);
+			break;
+		case Packet.getFriendInfo: // 회원한명의 등록된 각각의 친구정보들을 보내줌. 
 			try {
 			//	System.out.println("reply case C:");
 				sendClientFriendListInfo(content);	}
 			catch (IOException e1) {
 				e1.printStackTrace();	}
 			break;
-		case 'D':  
+		case Packet.joinMember:  
 			joinMember();
 			break;
-		case 'L':
+		case Packet.login:
 		//	System.out.println("reply() :: case L : " + content);
 			sendLoginFlag(content); 
 			break;
-		case 'M':
+		case Packet.sendChatMessage:
 			try {
 				deliverChatMessage(content);
 			} catch (IOException e) {
@@ -365,6 +369,31 @@ public class ClientThreadManager extends Thread{
 			packet.append(sender+".");
 			packet.append(message);
 			out.writeUTF(packet.toString()); //클라이언트대화창 , 클라이언트에서 메세지받을 작업 구현
+		}
+	}
+	private void sendUserInfo(String content)
+	{
+		int i=0;
+		StringTokenizer packetTokenizer = new StringTokenizer(content, ".");
+		String userID = packetTokenizer.nextToken();
+		StringBuilder userInfoPacket = new StringBuilder();
+		ArrayList<String[]> personTableTupleList = db_person.personTable;
+		userInfoPacket.append("B");
+		for(i=0;i<db_person.person_tuplecount;i+=1)
+		{
+			if(personTableTupleList.get(i)[0].equals(userID))
+			{
+				for(int x=0;x<6;x+=1)
+				{
+					userInfoPacket.append(personTableTupleList.get(i)[x] + ".");
+				}
+			}
+		}
+		try {
+			out.writeUTF(userInfoPacket.toString());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	public void run()
