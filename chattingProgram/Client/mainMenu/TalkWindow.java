@@ -53,7 +53,7 @@ public class TalkWindow extends JFrame implements ActionListener {
 			}
 		};
 	}
-	TalkWindow(NetworkLib networkLib,  String talkCompanion , HashMap<String,TalkWindow> talkList)
+	public TalkWindow(NetworkLib networkLib,  String talkCompanion , HashMap<String,TalkWindow> talkList)
 	{
 		this.networkLib = networkLib;
 		this.talkCompanion = talkCompanion;

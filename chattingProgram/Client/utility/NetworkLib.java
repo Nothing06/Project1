@@ -136,8 +136,10 @@ public  class NetworkLib extends Thread{
 		TalkWindow talkWindow;
 		talkWindow = talkingMap.get(talkTo);
 		if(talkWindow==null)
-		{
-			
+		{//»ý¼ºÀÚ :: TalkWindow(NetworkLib networkLib,  String talkCompanion , HashMap<String,TalkWindow> talkList)
+			talkWindow = new TalkWindow(this,talkTo, talkingMap);
+			talkingMap.put(talkTo, talkWindow);
+			talkWindow.deliverNewMessage(message);
 		}
 		else
 			talkWindow.deliverNewMessage(message);
