@@ -133,8 +133,14 @@ public  class NetworkLib extends Thread{
 		String talkTo = tokenizer.nextToken();
 		int startIdx = findDotIdx(content,1);
 		String message = content.substring(startIdx+1, content.length());
-		
-		talkingMap.get(talkTo).deliverNewMessage(message);
+		TalkWindow talkWindow;
+		talkWindow = talkingMap.get(talkTo);
+		if(talkWindow==null)
+		{
+			
+		}
+		else
+			talkWindow.deliverNewMessage(message);
 	}
 	void recvFile(String packet)
 	{
