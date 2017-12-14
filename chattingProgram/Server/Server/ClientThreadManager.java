@@ -13,10 +13,11 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Scanner;
 import java.util.StringTokenizer;
-import Server.Packet;
+
+import Packet.PacketHeader;
 import db.PersonTable;
+import loginMenu.RegContent;
 enum personTableField{id,password,emp_no,name,age,tel};
 public class ClientThreadManager extends Thread{
 	Socket socket;
@@ -25,9 +26,8 @@ public class ClientThreadManager extends Thread{
 	HashMap clients;
 	String clientID=null;
 	PersonTable db_person;
-	String ID="";   String password=""; 
-	String name="";  String age=""; String tel="";
-	String workspace = "C:\\Users\\user\\git\\Project1\\chattingProgram\\";
+	RegContent newMemberInfo;
+	String workspace = "C:\\Users\\user\\git\\Project1\\chattingProgram\\FriendListFileDir\\";
 	personTableField passwordField = personTableField.valueOf("password");
 	
 	@SuppressWarnings("unchecked")
@@ -65,17 +65,17 @@ public class ClientThreadManager extends Thread{
 		}
 		return is_valid;
 	}
-	void readMemberInfoFromClient()
+	void readJoinMemberInfoFromClient(String content) // 
 	{
+		StringTokenizer tokenizer = new StringTokenizer(content,".");
+		newMemberInfo = new RegContent();
 		
-		try {
-			ID = in.readUTF();
-			password = in.readUTF(); name=in.readUTF();
-			age = in.readUTF();	tel = in.readUTF();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			newMemberInfo.setRegID(tokenizer.nextToken());
+			newMemberInfo.setRegPassword(tokenizer.nextToken());
+			newMemberInfo.setRegName(tokenizer.nextToken());
+			newMemberInfo.setRegAge(tokenizer.nextToken());
+			newMemberInfo.setRegPhone(tokenizer.nextToken());
+		 
 	}
 	void createNewMemberFile(String clientID)
 	{
@@ -115,27 +115,27 @@ public class ClientThreadManager extends Thread{
 		System.out.println("packet: " + packet);
 		switch(packet.charAt(0))
 		{
-		case Packet.addFriend: // 친구아이디찾기기능  통신  // content : ID
+		case PacketHeader.addFriend: // 친구아이디찾기기능  통신  // content : ID
 			saveAndSendClientInfo(db_person, content);
 			break;
-		case Packet.getUserInfo:
+		case PacketHeader.getUserInfo:
 			sendUserInfo(content);
 			break;
-		case Packet.getFriendInfo: // 회원한명의 등록된 각각의 친구정보들을 보내줌. 
+		case PacketHeader.getFriendInfo: // 회원한명의 등록된 각각의 친구정보들을 보내줌. 
 			try {
 			//	System.out.println("reply case C:");
 				sendClientFriendListInfo(content);	}
 			catch (IOException e1) {
 				e1.printStackTrace();	}
 			break;
-		case Packet.joinMember:  
-			joinMember();
+		case PacketHeader.joinMember:  
+			joinMember(content);
 			break;
-		case Packet.login:
+		case PacketHeader.login:
 		//	System.out.println("reply() :: case L : " + content);
 			sendLoginFlag(content); 
 			break;
-		case Packet.sendChatMessage:
+		case PacketHeader.sendChatMessage:
 			try {
 				deliverChatMessage(content);
 			} catch (IOException e) {
@@ -183,20 +183,34 @@ public class ClientThreadManager extends Thread{
 			e.printStackTrace();
 		}
 	}
-	private void joinMember() {
+	private int createRegNoForNewMember()
+	{
+		int regYear = (int)(Math.random()*21) + 2000;
+		int regFilter1 = (int)(Math.random()*1000);
+		int regFilter2 = (int)(Math.random()*1000);
+		StringBuilder regNo = new StringBuilder();
+		regNo.append(String.valueOf(regYear));
+		regNo.append(String.valueOf(regFilter1));
+		regNo.append(String.valueOf(regFilter2));
+		return Integer.valueOf(regNo.toString());
+	}
+	private void joinMember(String content) {
 		String dbCommand;
-		readMemberInfoFromClient();
+		int regNo =0;
+		readJoinMemberInfoFromClient(content);
 /*		System.out.println("** registered Content from client");
 		System.out.println(ID); System.out.print(password);
 		System.out.println(name); System.out.println(age);
 		System.out.println(tel);*/
+		regNo = createRegNoForNewMember();
 		dbCommand = "insert into person "
 				+ "(id,password,emp_no,name,age,tel)" + " values('"
-				+ ID + "','" + password
-				+ "','" + 2009100224 + "','" + name + "','" + age + "','" + tel + "')";
+				+ newMemberInfo.getRegID() + "','" + newMemberInfo.getRegPassword()
+				+ "','" + regNo + "','" + newMemberInfo.getRegName() + "','" 
+						+ Integer.valueOf(newMemberInfo.getRegAge())+ "','" + newMemberInfo.getRegPhone() + "')";
 		db_person.insert(dbCommand);
-		db_person.addNewMemberInfo(ID, password, "2009100224", name, age, tel);
-		createNewMemberFile(ID);
+		db_person.addNewMemberInfoToList(newMemberInfo);
+		createNewMemberFile(newMemberInfo.getRegID());
 	}
 	void readClientFriendInfoFromStorage(ArrayList<String> clientFriendIDList)
 	{
@@ -412,7 +426,7 @@ public class ClientThreadManager extends Thread{
 					catch(SocketException e)
 					{
 					//	e.printStackTrace();
-						System.out.println(clientID + "님의  서버와의 연결을 종료.");
+						System.out.println(clientID + "님께서  서버와의 연결을 종료하였습니다.");
 						break;
 					}
 					

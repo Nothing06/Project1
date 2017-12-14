@@ -11,6 +11,8 @@ import javax.swing.JTable;
 
 import com.mysql.jdbc.Statement;
 
+import loginMenu.RegContent;
+
 public class PersonTable{
 
 	public ArrayList<String[]> personTable =new ArrayList<String[]>();
@@ -65,16 +67,15 @@ public class PersonTable{
 		
 		
 	}
-	public void addNewMemberInfo(String id, String password, String emp_no,
-								String name, String age, String tel)
+	public void addNewMemberInfoToList(RegContent regContent)
 	{
 		String[] tuple = new String[6];
-		tuple[0] = id;
-		tuple[1] = password;
-		tuple[2] = emp_no;
-		tuple[3] = name;
-		tuple[4] = age;
-		tuple[5] = id;
+		tuple[0] = regContent.getRegID();
+		tuple[1] = regContent.getRegPassword();
+		tuple[2] = regContent.getRegNo();
+		tuple[3] = regContent.getRegName();
+		tuple[4] = regContent.getRegAge();
+		tuple[5] = regContent.getRegPhone();
 		
 		personTable.add(tuple);
 //		customerList[tuple_cnt][1] = password;

@@ -19,20 +19,14 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
 import loginMenu.LoginWindow;
+import loginMenu.RegContent;
 import mainMenu.FriendTab;
 import mainMenu.MainMenu;
 import mainMenu.SettingTab;
 import mainMenu.TalkWindow;
 enum EnumPerson{id,password,emp_no,name,age,tel};
-interface talkListener{
-	boolean listenAndPrint();
-} 
-class chatInfo
-{
-	ArrayList<String> chatMessages = new ArrayList<String>();
-	int recv_cnt;
-	
-}
+
+
 final class Packet {
 	static final char addFriend = 'A';
 	static final char getUserInfo = 'B';
@@ -52,7 +46,7 @@ public  class NetworkLib extends Thread{
 	public String loginID;
 	List<Thread> threadArr = new ArrayList<>();
 	String content;
-	HashMap<String,chatInfo> chatMessageInfo;
+//	HashMap<String,chatInfo> chatMessageInfo;
 	HashMap<String,TalkWindow> talkingMap = new HashMap();
 	LoginWindow loginWindow;
 	MainMenu mainMenu=null;
@@ -432,6 +426,29 @@ public  class NetworkLib extends Thread{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	public boolean sendJoinedMemberInfo(RegContent regContent) {
+		boolean t = false;
+		StringBuilder packet = new StringBuilder();
+		packet.append("D");
+		try {
+			packet.append(regContent.getRegID() + ".");
+			packet.append(regContent.getRegPassword() + ".");
+			packet.append(regContent.getRegName() + ".");
+			packet.append(regContent.getRegAge() + ".");
+			packet.append(regContent.getRegPhone() + ".");
+			out.writeUTF(packet.toString());
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+
+		}
+
+		return t;
 	}
 /*	void openListeningService(String talkCompanion)
 	{

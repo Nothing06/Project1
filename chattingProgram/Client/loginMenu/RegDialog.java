@@ -14,6 +14,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import utility.InputChecker;
+import utility.NetworkLib;
 
 public class RegDialog extends JDialog implements ActionListener {
 	JPanel reg_input;
@@ -24,15 +25,16 @@ public class RegDialog extends JDialog implements ActionListener {
 	JButton regBtn = new JButton("등록");
 	JTextField[] txtArr = new JTextField[5];
 	JFrame parent;
-	RegContent rc;
+	RegContent regContent;
 	InputChecker inputChecker;
-	
-	public RegDialog(JFrame frame, RegContent rc, String title) {
+	NetworkLib networkLib;
+	public RegDialog(JFrame frame, String title, NetworkLib networkLib) {
 		
 		super(frame, title);
+		this.networkLib = networkLib;
 		parent  =  frame;
-		this.rc = rc;
 		inputChecker = new InputChecker();
+		regContent = new RegContent();
 		reg_input = new JPanel();
 		reg_input.setLayout(new BoxLayout(reg_input, BoxLayout.Y_AXIS));
 		for (i = 0; i < item_cnt; i += 1) {
@@ -54,32 +56,32 @@ public class RegDialog extends JDialog implements ActionListener {
 	}
 	boolean getJoinInputInfo_Ok()
 	{
-		rc.regID = txtArr[0].getText();
-		if(!inputChecker.checkID(rc.regID))
+		regContent.setRegID( txtArr[0].getText());
+		if(!inputChecker.checkID(regContent.getRegID()))
 		{
 			JOptionPane.showInputDialog("아이디는 4글자 이상이여야하며, '.'은 들어갈수없습니다.");
 			return false;
 		}
-		rc.regPassword = txtArr[1].getText();
-		if(!inputChecker.checkPassword(rc.regPassword))
+		regContent.setRegPassword( txtArr[1].getText());
+		if(!inputChecker.checkPassword(regContent.getRegPassword()))
 		{
 			JOptionPane.showInputDialog("비밀번호는 7글자 이상이여야합니다.");
 			return false;
 		}
-		rc.name = txtArr[2].getText();
-		if(!inputChecker.checkName(rc.name))
+		regContent.setRegName( txtArr[2].getText());
+		if(!inputChecker.checkName(regContent.getRegName()))
 		{
 			JOptionPane.showInputDialog("이름은 2글자 이상이여야 합니다.");
 			return false;
 		}
-		rc.age = (txtArr[3].getText());
-		if(!inputChecker.checkAge(rc.age))
+		regContent.setRegAge(txtArr[3].getText());
+		if(!inputChecker.checkAge(regContent.getRegAge()))
 		{
 			JOptionPane.showInputDialog("나이는 1살이상이여야 합니다.");
 			return false;
 		}
-		rc.tel = txtArr[4].getText();
-		if(!inputChecker.checkPhoneNumber(rc.tel))
+		regContent.setRegPhone(txtArr[4].getText());
+		if(!inputChecker.checkPhoneNumber(regContent.getRegPhone()))
 		{
 			JOptionPane.showInputDialog("핸드폰번호를 입력해주세요.(예 : 010-1234-5678)");
 			return false;
@@ -94,7 +96,7 @@ public class RegDialog extends JDialog implements ActionListener {
 		{
 			if(getJoinInputInfo_Ok())
 			{
-				((LoginWindow) parent).sendJoinedMemberInfo();
+				networkLib.sendJoinedMemberInfo(regContent);
 				this.dispose();
 			}
 		}

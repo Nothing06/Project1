@@ -121,8 +121,7 @@ public class LoginWindow extends JFrame implements ActionListener{
 
 	void registerProcess() {
 		// JOptionPane.showInputDialog
-		regContent = new RegContent();
-		regDialog = new RegDialog(this, regContent, "회원가입");
+		regDialog = new RegDialog(this, "회원가입", networkLib);
 		regDialog.setVisible(true);
 		// sendRegisteredClientInfo();
 	}
@@ -133,6 +132,7 @@ public class LoginWindow extends JFrame implements ActionListener{
 		
 		if (e.getSource() == loginButton) {
 			loginID = loginID_input.getText();
+			
 			if (loginID.equals("")) {
 				JOptionPane.showInputDialog("아이디를 입력해주세요");
 				return  ;
@@ -154,12 +154,12 @@ public class LoginWindow extends JFrame implements ActionListener{
 			}
 		} 
 		else if (e.getSource() == regButton) {
-			networkLib.start();
 			registerProcess();
+			
 		}
 	}
 
-	boolean sendJoinedMemberInfo() {
+/*	boolean sendJoinedMemberInfo() {
 		boolean t = false;
 		Socket temp_Socket;
 		DataOutputStream temp_out;
@@ -187,7 +187,7 @@ public class LoginWindow extends JFrame implements ActionListener{
 		}
 
 		return t;
-	}
+	}*/
 /*boolean try_login() {
 		boolean t = false;
 		try {
