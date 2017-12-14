@@ -6,6 +6,7 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -39,8 +40,8 @@ public class TalkWindow extends JFrame implements ActionListener {
 	ArrayList<JLabel> textlist = new ArrayList<>();
 	HashMap<String, TalkWindow> talkList;
 	WindowAdapter windowCloseEvent() {
-		return new java.awt.event.WindowAdapter() {
-			public void windowClosed(java.awt.event.WindowEvent evt) {
+		return new WindowAdapter() {
+			public void windowClosing(WindowEvent evt) {
 				try {
 					talkList.remove(talkCompanion);
 					
