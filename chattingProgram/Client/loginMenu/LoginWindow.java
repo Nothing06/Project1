@@ -131,6 +131,7 @@ public class LoginWindow extends JFrame implements ActionListener{
 		
 		
 		if (e.getSource() == loginButton) {
+//			loginPerform();
 			loginID = loginID_input.getText();
 			
 			if (loginID.equals("")) {

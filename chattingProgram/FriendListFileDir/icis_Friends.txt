@@ -2,3 +2,4 @@ hello
 goodboy
 goodgirl
 algorithm
+alsdk0701

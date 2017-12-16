@@ -62,20 +62,23 @@ public class SettingTab extends JPanel{
 	{
 		myTopPanel = new JPanel();
 	//	myTopPanel.setFont(myTopPanelFont);
-		myProfile = new JLabel("내 프로필 : " + loginID);
+		myTopPanel.setLayout(new BorderLayout());
+		myProfile = new JLabel("\t     \t    \t    내 프로필 ");
 		myProfile.setFont(myTopPanelFont);
 		editBtn = new JButton("Edit");
-		myTopPanel.add(myProfile);
-		myTopPanel.add(editBtn);
+		myTopPanel.add(myProfile, BorderLayout.CENTER);
+		myTopPanel.add(editBtn, BorderLayout.EAST);
 	}
 	void makeInfoPanel()
 	{
 		myInfoPanel = new JPanel();
 		myInfoPanel.setFont(myInfoPanelFont);
 		myInfoPanel.setLayout(new BoxLayout(myInfoPanel, BoxLayout.Y_AXIS));
-		myName = new JLabel("이름 : " ); myName.setFont(myInfoPanelFont);
-		myAge = new JLabel("나이: ");  myAge.setFont(myInfoPanelFont);
-		myPhoneNum = new JLabel("전화번호: ");  myPhoneNum.setFont(myInfoPanelFont);
+		myID = new JLabel(" *  ID: "); myID.setFont(myInfoPanelFont);
+		myName = new JLabel(" * 이름 : " ); myName.setFont(myInfoPanelFont);
+		myAge = new JLabel(" * 나이: ");  myAge.setFont(myInfoPanelFont);
+		myPhoneNum = new JLabel(" * 전화번호: ");  myPhoneNum.setFont(myInfoPanelFont);
+		myInfoPanel.add(myID);
 		myInfoPanel.add(myName);
 		myInfoPanel.add(myAge);
 		myInfoPanel.add(myPhoneNum);

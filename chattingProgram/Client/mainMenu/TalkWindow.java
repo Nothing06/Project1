@@ -117,7 +117,7 @@ public class TalkWindow extends JFrame implements ActionListener {
 	}
 	String uploadInputMessage() {
 		String message = "";
-		String me = "Me: ";
+		String me = "[Me] ";
 		if(messageInput.getText().equals(""))
 		{
 			return "";
