@@ -47,12 +47,18 @@ public class FriendTab extends JPanel implements ListSelectionListener, ActionLi
 	String loginID;
 	NetworkLib networkLib;
 	ArrayList<JFrame> friendInfoWindowList = new ArrayList<>();
-	ArrayList<String[]> friendInfoTuple_list = new ArrayList<>();
-	ArrayList<String> friendID_list = new ArrayList<>();
+	ArrayList<String[]> friendInfoList = new ArrayList<>();
+	public ArrayList<String> friendID_list = new ArrayList<>();
 	HashMap<String, TalkWindow> talkList = new HashMap<>();
 	String searchingID = null;
-
-	public FriendTab(NetworkLib networkLib, String ID) {
+	ChattingTab chattingTab;
+	MainMenu mainMenu;
+	public ArrayList<String[]> getFriendInfoList(){
+		return friendInfoList;
+	}
+	public FriendTab(MainMenu mainMenu, NetworkLib networkLib, String ID) {
+	//	this.chattingTab=chattingTab;
+		this.mainMenu = mainMenu;
 		this.networkLib = networkLib;
 		this.loginID = ID;
 		welcomeLabel = new JLabel(loginID + "님, weChat에 오신것을 환영합니다.");
@@ -72,28 +78,32 @@ public class FriendTab extends JPanel implements ListSelectionListener, ActionLi
 			public void mouseClicked(MouseEvent mouseEvent) {
 				JList list = (JList) mouseEvent.getSource();
 				if (mouseEvent.getClickCount() == 2) {
-					int index = list.locationToIndex(mouseEvent.getPoint());
-					String[] friendData = friendInfoTuple_list.get(index); 
-					if(friendData  != null)
+			/*		int index = list.locationToIndex(mouseEvent.getPoint());
+					String[] friendData = friendInfoList.get(index); 
+					if(friendData  == null)
 						return ; 
 					if (friendInfoWindowList.size() > 0) {
 						friendInfoWindowList.get(0).dispose();
-						friendInfoWindowList.remove(0);
+						friendInfoWindowList.remove(0);*/
+						String searchID = (String)list.getSelectedValue();
+						networkLib.searchMemberInfo(loginID,searchID);
 					}
-					FriendInfo f = new FriendInfo(friendData, networkLib, talkList,
-							friendID_list);
-					friendInfoWindowList.add(f);
-
+					
+			//		FriendInfo f = new FriendInfo(friendData, networkLib, talkList,
+			//				friendID_list);
+			//		friendInfoWindowList.add(f);
+					
 					
 
 				}
-			}
-		};
+			};
+		
 
 		friendlist.addMouseListener(friendlistListener);
 		// friendlist.setPreferredSize(new Dimension(500, 550));
+		//JScrollPane scroll = new JScrollPane();
 		scroll.setViewportView(friendlist);
-		border = BorderFactory.createTitledBorder("친구목록" + "(" + friendInfoTuple_list.size() + ")");
+		border = BorderFactory.createTitledBorder("친구목록" + "(" + friendInfoList.size() + ")");
 		scroll.setBorder(border); // 경계 설정
 		scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER); // 가로바정책
 		// list 셋팅
@@ -112,7 +122,7 @@ public class FriendTab extends JPanel implements ListSelectionListener, ActionLi
 	}
 
 	public ArrayList<String[]> getFriendInfoTuple_list() {
-		return friendInfoTuple_list;
+		return friendInfoList;
 	}
 
 	public ArrayList<String> getFriendID_list() {
@@ -124,7 +134,7 @@ public class FriendTab extends JPanel implements ListSelectionListener, ActionLi
 	}
 
 	public void setBorder() {
-		border = BorderFactory.createTitledBorder("친구목록" + "(" + friendInfoTuple_list.size() + ")");
+		border = BorderFactory.createTitledBorder("친구목록" + "(" + friendInfoList.size() + ")");
 		scroll.setBorder(border);
 	}
 
@@ -139,10 +149,10 @@ public class FriendTab extends JPanel implements ListSelectionListener, ActionLi
 		boolean t = false;
 		// System.out.println("friend_cnt: " + friend_cnt);
 		// JOptionPane.showInputDialog(friend_cnt);
-		for (i = 0; i < friendInfoTuple_list.size(); i += 1) {
+		for (i = 0; i < friendInfoList.size(); i += 1) {
 			// if (model.getElementAt(i).equals(s)) {
-			// JOptionPane.showInputDialog(friendInfoTuple_list.get(i)[0]);
-			if (friendInfoTuple_list.get(i)[0].equals(s)) {
+			// JOptionPane.showInputDialog(friendInfoList.get(i)[0]);
+			if (friendInfoList.get(i)[0].equals(s)) {
 				t = true;
 				break;
 			}
@@ -171,7 +181,7 @@ public class FriendTab extends JPanel implements ListSelectionListener, ActionLi
 				return;
 			}
 
-			networkLib.sendAddFriendPacketToServer(loginID, searchingID);
+			networkLib.AddFriend(loginID, searchingID);
 			// System.out.println(friendId);
 			// fillUpModelFromServer( friendId);
 		} else if (e.getSource() == delFriendBtn) {
@@ -179,21 +189,29 @@ public class FriendTab extends JPanel implements ListSelectionListener, ActionLi
 		}
 	}
 
-	void caseAddFriend() {
+	public void caseAddFriend() {
 
 	}
-
+	public void popUpFriendInfo(String[] searchInfoTuple)
+	{
+		FriendInfo f = new FriendInfo(searchInfoTuple, networkLib, talkList,
+								friendID_list);
+	}
+	public void setBorderText(int friendCnt) {
+		border = BorderFactory.createTitledBorder("친구목록" + "(" + friendCnt + ")");
+		scroll.setBorder(border);
+	}
 	public void addFriendToList(String[] friendInfoTuple) {
 		model.add(friendInfoTuple[0]);
-		friendInfoTuple_list.add(friendInfoTuple);
-		Collections.sort(friendInfoTuple_list, new Comparator<String[]>() {
+		friendInfoList.add(friendInfoTuple);
+		Collections.sort(friendInfoList, new Comparator<String[]>() {
 			@Override
 			public int compare(String[] o1, String[] o2) {
 				// TODO Auto-generated method stub
 				return o1[0].compareToIgnoreCase(o2[0]);
 			}
 		});
-		border = BorderFactory.createTitledBorder("친구목록" + "(" + friendInfoTuple_list.size() + ")");
+		border = BorderFactory.createTitledBorder("친구목록" + "(" + friendInfoList.size() + ")");
 		scroll.setBorder(border); // 경계 설정
 	}
 }

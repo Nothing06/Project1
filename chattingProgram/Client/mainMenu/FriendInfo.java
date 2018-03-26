@@ -3,6 +3,7 @@ package mainMenu;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -56,6 +57,7 @@ public class FriendInfo extends JFrame implements ActionListener { //친구정보 보
 		sendFileBtn.addActionListener(this);
 		getContentPane().add(friendInfoPanel);
 		setSize(400,400);
+		setTitle("FriendInfo");
 		setVisible(true);
 	}
 	@Override
@@ -90,7 +92,12 @@ public class FriendInfo extends JFrame implements ActionListener { //친구정보 보
                 System.out.println("You chose to open this file: " +
                      chooser.getSelectedFile(). getName());
              }
-             networkLib.sendFile(chooser.getSelectedFile().getAbsolutePath(),talkCompanionID);
+             try {
+				networkLib.sendFile(chooser.getSelectedFile().getAbsolutePath(),talkCompanionID);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
 	}
 	

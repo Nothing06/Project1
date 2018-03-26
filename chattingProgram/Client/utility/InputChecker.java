@@ -42,6 +42,10 @@ public class InputChecker {
 	}
 	public boolean checkAge(String age)
 	{
+		for(int i=0;i<age.length();i+=1) {
+			if(age.charAt(i) < '0' || age.charAt(i) >'9')
+				return false;
+		}
 		int n = Integer.valueOf(age);
 		if(n<1)
 			return false;
@@ -55,11 +59,12 @@ public class InputChecker {
 	{
 		int i=0;
 		int len = phoneNum.length();
-		String firstToken = phoneNum.substring(0, 3);
 		if(len != 13)
 		{
 			return false;
 		}
+		String firstToken = phoneNum.substring(0, 3);
+		
 		if(!firstToken.equals("010"))
 		{
 			return false;

@@ -11,76 +11,118 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
 import utility.InputChecker;
 import utility.NetworkLib;
 
 public class RegDialog extends JDialog implements ActionListener {
-	JPanel reg_input;
-	JPanel[] items = new JPanel[6];
+	JPanel regInputPanel;
+	final int regItemCnt = 7;
+	JPanel[] regItemPanelList = new JPanel[regItemCnt];
 	int i = 0;
-	final int item_cnt = 5;
-	String[] str_items = { "아이디 ", "비밀번호 ", "이름 ", "나이 ", "연락처 " };
+	
+	enum regItemEnum  {ID,PASSWORD,NAME,AGE,PHONE,REGISTER};
+	public regItemEnum item;
+	String[] regItemNameArr = { "아이디 ", "비밀번호 ", "이름 ", "나이 ", "연락처 ","등록" };
 	JButton regBtn = new JButton("등록");
-	JTextField[] txtArr = new JTextField[5];
+	JTextField[] regItemInputArr = new JTextField[7]; // 연락처는 JTextField가 3개(ex. 010 / 3425 / 4251) 
 	JFrame parent;
 	RegContent regContent;
 	InputChecker inputChecker;
 	NetworkLib networkLib;
+	void makeRegItemNameLabel(int idx) {
+		regItemPanelList[idx].add(new JLabel(regItemNameArr[idx]));
+	}
+	void makeRegItemPanel(int idx) {
+		regItemPanelList[idx] = new JPanel();
+		regItemPanelList[idx].setLayout(new FlowLayout());
+	}
 	public RegDialog(JFrame frame, String title, NetworkLib networkLib) {
 		
 		super(frame, title);
 		this.networkLib = networkLib;
 		parent  =  frame;
 		inputChecker = new InputChecker();
-		regContent = new RegContent();
-		reg_input = new JPanel();
-		reg_input.setLayout(new BoxLayout(reg_input, BoxLayout.Y_AXIS));
-		for (i = 0; i < item_cnt; i += 1) {
-			items[i] = new JPanel();
-			items[i].setLayout(new FlowLayout());
-			items[i].add(new JLabel(str_items[i]));
-			txtArr[i] = new JTextField(25);
-			txtArr[i].setEditable(true);
-			items[i].add(txtArr[i]);
-			reg_input.add(items[i]);
-		}
-		items[5] = new JPanel();
-		items[5].add(regBtn);
-		reg_input.add(items[5]);
+		makeRegDialog();
 
-		regBtn.addActionListener(this);
-		getContentPane().add(reg_input);
+		
+		getContentPane().add(regInputPanel);
 		setSize(400, 500);
 	}
-	boolean getJoinInputInfo_Ok()
+	private void makeRegDialog() {
+		regContent = new RegContent();
+		regInputPanel = new JPanel();
+		regInputPanel.setLayout(new BoxLayout(regInputPanel, BoxLayout.Y_AXIS));
+		makeRegItemPanelList();
+		regInputPanel.add(regItemPanelList[regItemEnum.PHONE.ordinal()]);
+		
+		makeRegBtnPanel();
+	}
+	private void makeRegItemPanelList() {
+		for (i = 0; i < regItemCnt; i += 1) {
+			makeRegItemPanel(i);
+			if(i<=regItemEnum.PHONE.ordinal())
+				makeRegItemNameLabel(i);
+			
+			makeRegInputItem(i);
+			
+			if(i>=regItemEnum.PHONE.ordinal())
+			{
+				regItemPanelList[regItemEnum.PHONE.ordinal()].add(regItemInputArr[i]);
+				regItemPanelList[regItemEnum.PHONE.ordinal()].add(new JLabel("  "));
+			}
+			else {
+				regItemPanelList[i].add(regItemInputArr[i]);
+				regInputPanel.add(regItemPanelList[i]);
+			}
+		}
+	}
+	private void makeRegBtnPanel() {
+		regItemPanelList[regItemEnum.REGISTER.ordinal()] = new JPanel();
+		regItemPanelList[regItemEnum.REGISTER.ordinal()].add(regBtn);
+		regInputPanel.add(regItemPanelList[regItemEnum.REGISTER.ordinal()]);
+		regBtn.addActionListener(this);
+	}
+	private void makeRegInputItem(int i) {
+		if(i == regItemEnum.PASSWORD.ordinal())
+			regItemInputArr[i] = new JPasswordField(25);
+		else if(i>= regItemEnum.PHONE.ordinal())
+			regItemInputArr[i] = new JTextField(5);
+		else	
+			regItemInputArr[i] = new JTextField(25);
+		regItemInputArr[i].setEditable(true);
+	}
+	boolean checkUpRegInput()
 	{
-		regContent.setRegID( txtArr[0].getText());
+		regContent.setRegID( regItemInputArr[0].getText());
 		if(!inputChecker.checkID(regContent.getRegID()))
 		{
 			JOptionPane.showInputDialog("아이디는 4글자 이상이여야하며, '.'은 들어갈수없습니다.");
 			return false;
 		}
-		regContent.setRegPassword( txtArr[1].getText());
+		regContent.setRegPassword( regItemInputArr[1].getText());
 		if(!inputChecker.checkPassword(regContent.getRegPassword()))
 		{
 			JOptionPane.showInputDialog("비밀번호는 7글자 이상이여야합니다.");
 			return false;
 		}
-		regContent.setRegName( txtArr[2].getText());
+		regContent.setRegName( regItemInputArr[2].getText());
 		if(!inputChecker.checkName(regContent.getRegName()))
 		{
 			JOptionPane.showInputDialog("이름은 2글자 이상이여야 합니다.");
 			return false;
 		}
-		regContent.setRegAge(txtArr[3].getText());
+		regContent.setRegAge(regItemInputArr[3].getText());
 		if(!inputChecker.checkAge(regContent.getRegAge()))
 		{
-			JOptionPane.showInputDialog("나이는 1살이상이여야 합니다.");
+			JOptionPane.showInputDialog("잘못 입력하셨습니다.(자신의 나이 숫자를 입력해주세요.)");
 			return false;
 		}
-		regContent.setRegPhone(txtArr[4].getText());
+		regContent.setRegPhone(regItemInputArr[4].getText() + "-"
+									+ regItemInputArr[5].getText() + "-" 
+									+ regItemInputArr[6].getText() );
 		if(!inputChecker.checkPhoneNumber(regContent.getRegPhone()))
 		{
 			JOptionPane.showInputDialog("핸드폰번호를 입력해주세요.(예 : 010-1234-5678)");
@@ -94,7 +136,7 @@ public class RegDialog extends JDialog implements ActionListener {
 
 		if(e.getSource() == regBtn)
 		{
-			if(getJoinInputInfo_Ok())
+			if(checkUpRegInput())
 			{
 				networkLib.sendJoinedMemberInfo(regContent);
 				this.dispose();

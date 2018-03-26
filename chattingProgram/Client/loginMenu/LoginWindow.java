@@ -6,16 +6,13 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.IOException;
-import java.net.Socket;
-import java.net.UnknownHostException;
 
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -23,7 +20,6 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
-import utility.InputChecker;
 import utility.NetworkLib;
 
 public class LoginWindow extends JFrame implements ActionListener{
@@ -40,17 +36,20 @@ public class LoginWindow extends JFrame implements ActionListener{
 	JTextField loginID_input;
 	JPasswordField password_input;
 	JButton loginButton;
-
+	KeyListener keyListener;
 	JButton regButton;
 	JPanel bottom_panel;
 	public String loginID;
 	String loginPassword;
-	String serverIp = "192.168.0.6";
+	//String serverIp = "10.0.29.89";
 	RegDialog regDialog;
 	RegContent regContent;
-
-	public LoginWindow(NetworkLib networkLib) {
-		this.networkLib = networkLib;
+	public NetworkLib getNetworkLib()
+	{
+		return networkLib;
+	}
+	public LoginWindow() {
+		this.networkLib = new NetworkLib(this);
 		this.networkLib.includeLoginWindow(this);
 	//	networkLib.start();
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
@@ -66,13 +65,39 @@ public class LoginWindow extends JFrame implements ActionListener{
 	}
 
 	void makeImagePanel() {
-		loginImage = new ImageIcon("C:\\Users\\user\\Pictures\\wechat.png");
+		loginImage = new ImageIcon("C:\\Users\\user\\Pictures\\wechat2.png");
+		
 		img_label = new JLabel(loginImage);
+		img_label.setSize(500, 400);
 		img_panel = new JPanel();
 		img_panel.add(img_label);
 	}
 
 	void makeInputPanel() {
+		 KeyListener keyListener = new KeyListener() {
+		      public void keyPressed(KeyEvent keyEvent) {
+		    	  switch(keyEvent.getKeyCode())
+		    	  {
+		    	  case KeyEvent.VK_ENTER:
+		    		  	loginButton.doClick();
+		    		  	break;
+		    	  }
+		      }
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void keyTyped(KeyEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		      };
+
+		      
 		Font f = new Font("바탕", Font.BOLD, 20);
 		input_panel = new JPanel();
 		input_panel.setLayout(new GridLayout(2, 2));
@@ -80,8 +105,11 @@ public class LoginWindow extends JFrame implements ActionListener{
 		password_label = new JLabel("Password");
 		loginID_input = new JTextField();
 		loginID_input.setFont(f);
+		loginID_input.addKeyListener(keyListener);
 		password_input = new JPasswordField();
 		password_input.setFont(f);
+		password_input.addKeyListener(keyListener);
+		
 		input_panel.add(id_label);
 		input_panel.add(loginID_input);
 		input_panel.add(password_label);
@@ -125,7 +153,7 @@ public class LoginWindow extends JFrame implements ActionListener{
 		regDialog.setVisible(true);
 		// sendRegisteredClientInfo();
 	}
-
+	@Override
 	public void actionPerformed(ActionEvent e) {
 
 		
@@ -139,12 +167,13 @@ public class LoginWindow extends JFrame implements ActionListener{
 				return  ;
 			} 
 			loginPassword = new String(password_input.getPassword());
-			JOptionPane.showInputDialog(loginPassword);
+		//	JOptionPane.showInputDialog(loginPassword);
 			if(loginPassword.equals(""))
 			{
 				JOptionPane.showInputDialog("비밀번호를 입력해주세요");
 				return  ;
 			}
+			networkLib = new NetworkLib(this);
 			networkLib.loginID= loginID;
 			networkLib.start();
 			try {

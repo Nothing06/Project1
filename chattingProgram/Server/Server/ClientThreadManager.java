@@ -13,6 +13,7 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import Packet.PacketHeader;
@@ -116,7 +117,8 @@ public class ClientThreadManager extends Thread{
 		switch(packet.charAt(0))
 		{
 		case PacketHeader.addFriend: // 친구아이디찾기기능  통신  // content : ID
-			saveAndSendClientInfo(db_person, content);
+			saveAndSendClientInfo(db_person, content,true); // last boolean은  
+															//true면 멤버정보 보내주는것 + add/save 기능 ,  false면  멤버정보만 보내주는것
 			break;
 		case PacketHeader.getUserInfo:
 			sendUserInfo(content);
@@ -131,13 +133,32 @@ public class ClientThreadManager extends Thread{
 		case PacketHeader.joinMember:  
 			joinMember(content);
 			break;
+		case PacketHeader.editProfile:
+			editUserProfile(content);
+			break;
+		case PacketHeader.sendFile:
+			try {
+				deliverFileToClient(content);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			break;
 		case PacketHeader.login:
 		//	System.out.println("reply() :: case L : " + content);
 			sendLoginFlag(content); 
 			break;
-		case PacketHeader.sendChatMessage:
+		case PacketHeader.sendChatMessage_1TON:
 			try {
-				deliverChatMessage(content);
+				deliverChatMessage_1toN(content);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			break;
+		case PacketHeader.sendChatMessage_1TO1:
+			try {
+				deliverChatMessage_1to1(content);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -146,12 +167,86 @@ public class ClientThreadManager extends Thread{
 		case 'Q':
 			
 			break;
+		case PacketHeader.searchMember:
+			saveAndSendClientInfo(db_person, content,false);
+			break;
 		case '1': // 방 통신
 			break;
 		case '2': //...
 			break;
 		case '3':
 			break;
+		}
+	}
+	private void editUserProfile(String content) {
+		// TODO Auto-generated method stub
+		// id, passwd, name, phoneNum
+		int i=0;
+		int personTable_idx=-1;
+		String sqlsrc="update person set ";
+		String sql="update person set ";
+		StringTokenizer editContent = new StringTokenizer(content, ".");
+		String attributeName[] = {"id","password", "name","tel"};
+		String[] attributeValue = new String[4];
+		int changedColumnCnt=0;
+		while(editContent.hasMoreTokens())
+		{
+			attributeValue[i] = editContent.nextToken();
+			i+=1;
+		}
+		
+		
+		for(i=0;i<db_person.personTable.size();i+=1)
+		{
+			if(db_person.personTable.get(i)[0].equals(attributeValue[0]))
+			{
+				personTable_idx = i;
+				break;
+			}
+		}
+		
+		int attributeValue_idx=1;
+		for(i=0;i<6;i+=1)
+		{
+			if(i%2==1) // password, name, tel Index:  1, 3, 5
+			{
+				if(!attributeValue[attributeValue_idx].equals("#"))
+				{
+					db_person.personTable.get(personTable_idx)[i] = attributeValue[attributeValue_idx];
+				}
+				attributeValue_idx+=1;
+			}
+		}
+		for(int x=1;x<4;x+=1)
+		{
+			if(attributeValue[x].equals("#"))
+			{
+				continue;
+			}
+			else
+			{
+				if(changedColumnCnt > 0)
+					sql+=",";
+				sql += attributeName[x];
+				sql += "='";
+				sql += attributeValue[x];
+				sql += "'";
+				changedColumnCnt+=1;
+				System.out.println("aN: " + attributeName[x] + " aV:" + attributeValue[x]);
+			}
+		}
+		if(sql.equals(sqlsrc))
+		{
+			System.out.println("No Change to edit Profile Info.");
+			return;
+		}
+		else {
+			sql+=" where id=";
+			sql+="'";
+			sql+=attributeValue[0];
+			sql+="'";
+			db_person.update(attributeValue[0],sql);
+			System.out.println("editted Profile Info.");
 		}
 	}
 	private void sendLoginFlag(String content) {
@@ -173,6 +268,7 @@ public class ClientThreadManager extends Thread{
 			else
 			{
 				out.writeUTF("L0");
+				System.out.println("Sent login Failed Flag.");
 				//in.close();
 				//out.close();
 			}
@@ -212,7 +308,7 @@ public class ClientThreadManager extends Thread{
 		db_person.addNewMemberInfoToList(newMemberInfo);
 		createNewMemberFile(newMemberInfo.getRegID());
 	}
-	void readClientFriendInfoFromStorage(ArrayList<String> clientFriendIDList)
+	void readClientFriendInfoFromFile(ArrayList<String> clientFriendIDList)
 	{
 		BufferedReader reader;
 		String path;
@@ -251,18 +347,18 @@ public class ClientThreadManager extends Thread{
 		int friendID_list_idx=0;
 		StringBuilder clientFriendListInfoPkt = new StringBuilder();
 		
-		readClientFriendInfoFromStorage(clientFriendIDList); // 파일에 있는 한 고객의 친구 아이디를 전부 읽어
+		readClientFriendInfoFromFile(clientFriendIDList); // 파일에 있는 한 고객의 친구 아이디를 전부 읽어
 																//ArrayList::clientFriendIDList에 저장.
 		clientFriendListInfoPkt.append("C");
 		if(clientFriendIDList.size() > 0)
 		{
-			for(int tuple_idx=0;tuple_idx<db_person.person_tuplecount;tuple_idx+=1)
+			for(int tuple_idx=0;tuple_idx < db_person.person_tuplecount;tuple_idx+=1)
 			{
 				if( db_person.personTable.get(tuple_idx)[0].equals(clientFriendIDList.get(friendID_list_idx))) 		
 				{
 				//	System.out.println("friendID_list_idx: " + friendID_list_idx);
 					for(int j=0;j<6;j+=1)
-					{
+					{ // id, no, name, age, phoneNum
 						if(j==passwordField.ordinal())
 							continue;
 						//	out.writeUTF((String)db_person.personTable.get(tuple_idx)[j]);
@@ -277,23 +373,27 @@ public class ClientThreadManager extends Thread{
 		//System.out.println(clientFriendListInfoPkt.toString());
 		out.writeUTF(clientFriendListInfoPkt.toString());
 	}
-	private void saveAndSendClientInfo(PersonTable db_person, String tryingAddID) { // case A
+	private void saveAndSendClientInfo(PersonTable db_person, String tryingAddID, boolean save) { // case A,S
 		String clientID;
 		boolean idfound=false;
 		StringTokenizer st = new StringTokenizer(tryingAddID,".");
 		StringBuilder friendInfo = new StringBuilder();
-		System.out.println("tryingAddID: " + tryingAddID);
+	//	System.out.println("tryingAddID: " + tryingAddID);
 		tryingAddID = st.nextToken();
-		System.out.println("tryingAddID: " + tryingAddID);
+	//	System.out.println("tryingAddID: " + tryingAddID);
 		clientID = st.nextToken();
 
-		friendInfo.append("A");
+		if(save == true)
+			friendInfo.append("A");
+		else
+			friendInfo.append("S");
 		for(int tuple_idx=0;tuple_idx<db_person.person_tuplecount;tuple_idx+=1)
 		{
 			if(db_person.personTable.get(tuple_idx)[0].equals(tryingAddID))
 			{
 				idfound = true;
-				saveTryingAddIDTo_clientIDtxt(clientID,tryingAddID);
+				if(save == true)
+					saveTryingAddIDTo_clientIDtxt(clientID,tryingAddID);
 				
 					for(int j=0;j<6;j+=1)
 					{
@@ -318,7 +418,10 @@ public class ClientThreadManager extends Thread{
 		else if(idfound== false)
 		{
 			try {
-				out.writeUTF("A.....");
+				if(save==true)
+					out.writeUTF("A.....");
+				else
+					out.writeUTF("S.....");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -348,7 +451,7 @@ public class ClientThreadManager extends Thread{
 			e1.printStackTrace();
 		}
 	}
-	int findDotIdx(String content, int dot_seq)
+	int findDotIdx(String content, int dot_seq) //dot_seq: 1부터 시작
 	{
 		int dot_cnt=0;
 		for(int i=0;i<content.length();i+=1)
@@ -362,20 +465,84 @@ public class ClientThreadManager extends Thread{
 		}
 		return -1;
 	}
-	private void deliverChatMessage(String content) throws IOException
+	private void deliverFileToClient(String content) throws IOException
+	{
+		StringTokenizer tokenizer = new StringTokenizer(content, ".");
+		String sender = tokenizer.nextToken();
+		String receiver = tokenizer.nextToken();
+		String file = tokenizer.nextToken();
+		StringBuilder packet = new StringBuilder();
+		
+		packet.append("F");
+		packet.append(sender+".");
+		packet.append(file);
+		
+		DataOutputStream out = (DataOutputStream)clients.get(receiver);
+		out.writeUTF(packet.toString());
+		
+	}
+	private void deliverChatMessage_1toN(String content) throws IOException
+	{
+		int messageFirstIdx = findDotIdx(content,1)+1;
+		String subContent = content.substring(0,messageFirstIdx-1);
+		StringTokenizer tokenizer = new StringTokenizer(subContent,"#");
+		String chatRoomNumber = tokenizer.nextToken();
+		String sender = tokenizer.nextToken();
+		List<String> receivers = new ArrayList<String>();
+		String token;
+		String message = content.substring(messageFirstIdx, content.length());
+		//int personCnt=0;
+		
+		while(tokenizer.hasMoreTokens())
+		{
+			token = tokenizer.nextToken();
+		if(token.charAt(0)=='.')
+			break;
+		receivers.add(token);
+			//personCnt+=1;
+		}
+		/*
+		packet.append("G"+"#");
+		packet.append(chatRoomNumber + "#");
+		packet.append(sender+"#");
+		for(int x=0;x<receivers.size();x+=1)
+		{
+			packet.append(receivers.get(x) + "#");
+		}
+		packet.append("." + message);*/
+		
+		DataOutputStream[] out = new DataOutputStream[receivers.size()];
+		for(int i=0;i<receivers.size();i+=1) {
+			
+				out[i] = (DataOutputStream)clients.get(receivers.get(i));
+				if(out[i] == null)
+				{
+			//		out[i].writeUTF("G" + sender +".이 로그인하지 않았습니다.");
+				}
+				else
+				{
+					if(!receivers.get(i).equals(sender)) 
+						out[i].writeUTF("G"+content); //클라이언트대화창 , 클라이언트에서 메세지받을 작업 구현
+				
+				}
+		}
+		
+		
+	}
+	private void deliverChatMessage_1to1(String content) throws IOException
 	{
 		StringTokenizer tokenizer = new StringTokenizer(content,".");
 		String sender = tokenizer.nextToken();
 		String receiver = tokenizer.nextToken();
-		StringBuilder packet = new StringBuilder();
+		StringBuilder packet = new StringBuilder(); // server에서 client로 보낼 패킷 
 		int	messageFirstIdx = findDotIdx(content, 2)+1;
 		String message = content.substring(messageFirstIdx, content.length());
 		DataOutputStream out;
 		out = (DataOutputStream)clients.get(receiver);
-
+		
 		if(out == null)
 		{
-			//out.writeUTF("M" + sender +".이 로그인하지 않았습니다.");
+			out.writeUTF("M" + sender +".이 로그인하지 않았습니다.");
 		}
 		else
 		{

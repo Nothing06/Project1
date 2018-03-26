@@ -53,13 +53,32 @@ public class PersonTable{
 			System.out.println("DB접속오류"+e);
 		}
 	}
-	public void insert(String sql)
+	public void update(String loginID,String sql)
 	{
-		Statement stm;
+		PreparedStatement stm=null;
 		System.out.println(sql);
 		try {
-			stm = (Statement) con.createStatement();
+			stm = (PreparedStatement) con.prepareStatement(sql);
 			stm.executeUpdate(sql);
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			  try {
+				stm.close();
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+	}
+	public void insert(String sql) // 2017.12.24.  오후 1:09  Statement -> PreparedStatement로 수정
+	{
+		PreparedStatement stm;
+		System.out.println(sql);
+		try {
+			stm = (PreparedStatement) con.prepareStatement(sql);
+			stm.executeUpdate();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -105,7 +124,7 @@ public class PersonTable{
 			System.out.println("select 실행오류: " + e);
 		}
 	}
-	public void loadFriendInfoDB()
+	public void loadFriendInfoDB() // 2018 03 17 오전 1:14  서버에서 DB내용을 메모리에 로드해주고 실시간으로 변경해줘야됨
 	{
 		try
 		{
