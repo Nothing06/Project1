@@ -8,13 +8,16 @@ import javax.swing.AbstractListModel;
 
 public class SortedListModel extends AbstractListModel {
 	  SortedSet<String> model;
-
+	  int n;
 	  public SortedListModel() {
 	    model = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 	  }
 	  public SortedSet<String> getSortedSet()
 	  {
 		  return model;
+	  }
+	  public int getNum() {
+		  return n;
 	  }
 	  public int getSize() {
 	    return model.size();
