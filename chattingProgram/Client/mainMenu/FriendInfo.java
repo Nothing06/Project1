@@ -92,12 +92,12 @@ public class FriendInfo extends JFrame implements ActionListener { //친구정보 보
                 System.out.println("You chose to open this file: " +
                      chooser.getSelectedFile(). getName());
              }
-             try {
-				networkLib.sendFile(chooser.getSelectedFile().getAbsolutePath(),talkCompanionID);
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+//             try {
+//			//	networkLib.sendFile(chooser.getSelectedFile().getAbsolutePath(),talkCompanionID);
+//			} catch (IOException e1) {
+//				// TODO Auto-generated catch block
+//				e1.printStackTrace();
+//			}
 		}
 	}
 	

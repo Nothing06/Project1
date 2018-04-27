@@ -1,14 +1,25 @@
 package utility;
 
-
 import java.awt.event.WindowAdapter;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +27,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
-import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
@@ -40,6 +50,7 @@ final class Packet {
 	public static final char editProfile = 'E';
 	public static final char sendFile = 'F';
 	public static final char sendChatMessage_1TON = 'G';
+	public static final char sendReqIP = 'I';
 	public static final char login = 'L';
 	public static final char sendChatMessage_1TO1 = 'M';
 	public static final char searchMember='S';
@@ -64,30 +75,89 @@ class ChattingRoom{
 public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그리고 mainMenu에서는 networkLib에서의 최근받은 패킷을 가져온다!..
 
 	// private TalkingListener talkingListener;
-	
-	public String serverIp = "123.214.12.123";// "192.168.25.2";//"10.0.27.215";
+	public ReceiveFile rf=null;
+	public String serverIp = "10.0.31.183";//"123.214.12.123"// "192.168.25.2";//"10.0.27.215";
 	public Socket socket;
 	public DataOutputStream out;
 	public DataInputStream in;
+	public ObjectOutputStream oos;
+	public ObjectInputStream ois;
 	public String loginID;
+	File file=null;
 	List<Thread> threadArr = new ArrayList<>();
 	String content;
 	// HashMap<String,chatInfo> chatMessageInfo;
 	HashMap<String, TalkWindow> talkingMap = new HashMap();
 	HashMap<Integer,TalkWindow> chattingRoom = new HashMap();
 	int chattingRoomNumber=0;
-	
+	ArrayList<String> ipList = new ArrayList<>();
+	ArrayList<String> idList =  new ArrayList<>();;
+	ArrayList<String> portList  = new ArrayList<>();;
 	LoginWindow loginWindow;
 	MainMenu mainMenu = null;
 	boolean mPacketArrived = false;
 	volatile boolean loginFailed=false;
-	
+	Socket sock;
+	DataOutputStream out2;
+	BufferedOutputStream bout;
+	DataInputStream din ;
+	boolean fileProc = false;
 	@SuppressWarnings("unchecked")
 	public void includeLoginWindow(LoginWindow loginWindow) {
 		this.loginWindow = loginWindow;
 	}
 	public HashMap<Integer,TalkWindow> getChattingRoomHashMap(){
 		return chattingRoom;
+	}
+	public ArrayList<String> getIDIPPort(String content){
+//		ArrayList<String> ipList = new ArrayList<>();
+//		idList = new ArrayList<>();
+//		portList =new ArrayList<>();
+		ArrayList<String> id_ip_port_List = new ArrayList<>();
+		StringTokenizer st = new StringTokenizer(content, "#");
+		String token;
+	//	mainMenu.popUp("E");
+	//	while(st.hasMoreTokens())
+		{
+			token = st.nextToken();
+		//	mainMenu.popUp("token: " + token);
+			id_ip_port_List.add(token);
+			
+			token = st.nextToken();
+		//	mainMenu.popUp("token: " + token);
+			id_ip_port_List.add(token);
+			
+			token = st.nextToken();
+		//	mainMenu.popUp("token: " + token);
+			id_ip_port_List.add(token);
+		}
+	//	mainMenu.popUp(ipList);
+		return id_ip_port_List;
+	}
+	
+	public void caseSendReqIP(String content) {
+//		Thread t = new Thread(new Runnable() {
+//
+//			@Override
+//			public void run() {
+//				// TODO Auto-generated method stub
+//				try {
+					try {
+						
+						sendFileProc(file,getIDIPPort(content));
+						
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+//				} catch (IOException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//			}
+//			
+//		});
+	//	t.start();
 	}
 	void dispatchContent(String packet) {
 		char packetType = packet.charAt(0);
@@ -96,6 +166,8 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		TalkWindow talkWindow;
 		boolean idFound;
 		
+//		if(mainMenu!=null)
+//		mainMenu.popUp(content.charAt(0));
 		switch (packetType) {
 		case Packet.sendChatMessage_1TO1:
 			deliver1to1MessageToTalkWindow(content);
@@ -123,8 +195,14 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		case Packet.getUserInfo:
 			loadMyInfoFromServer(content, mainMenu.getSettingTab());
 			break;
+		case Packet.sendReqIP:
+			
+		//	mainMenu.popUp(ipList);
+			caseSendReqIP(content);
+			break;
 		case Packet.getFriendInfo:
 			try {
+			//	JOptionPane.showInputDialog("getFriendInfo case");
 				loadFriendInfoFromServer(content, mainMenu.getFriendTab());
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
@@ -135,21 +213,41 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		case Packet.joinMember:
 			break;
 		case Packet.sendFile:
-			// recvFile();
+			try {
+				deliverFileToTalkWindow(content);
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			break;
+		case 'Z':
+			startReceiveFile(content);
 			break;
 		case Packet.editProfile:
 			break;
 		case Packet.login:
 			loginFailed = LoginFailed(content);
 			if (!loginFailed)
+			{
+			
 				GetFriendList();
+				
+			}
 			else
-			//System.out.println("Login Failed.");
+				System.out.println("Login Failed.");
 			
 			break;
 		}
 	}
 	
+	private void startReceiveFile(String content) {
+		// TODO Auto-generated method stub
+		String senderID = new String(content);
+		ReceiveFile rf = new ReceiveFile(senderID, mainMenu, oos,ois);
+	}
 	boolean checkIfIDFound(String content, String[] friendInfoTuple) {
 		StringTokenizer friendContent = new StringTokenizer(content, ".");
 		String attribute = null;
@@ -169,10 +267,10 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		return idFound;
 	}
 
-	int findDotIdx(String content, int dot_seq) {
+	int findCharacterIdx(String content, int c, int dot_seq) {
 		int dot_cnt = 0;
 		for (int i = 0; i < content.length(); i += 1) {
-			if (content.charAt(i) == '.') {
+			if (content.charAt(i) == c) {
 				dot_cnt += 1;
 				if (dot_cnt == dot_seq)
 					return i;
@@ -185,7 +283,7 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		StringTokenizer tokenizer = new StringTokenizer(content, "#");
 		String chattingRoomNumber = tokenizer.nextToken();
 		String from = tokenizer.nextToken();
-		int startIdx = findDotIdx(content, 1);
+		int startIdx = findCharacterIdx(content,'.', 1);
 		String message = content.substring(startIdx + 1, content.length());
 		String token;
 		//mPacketArrived = true;
@@ -220,10 +318,42 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		}
 		return talkWindow;
 	}
+	public static byte[] hexStringToByteArray(String s) {
+	    int len = s.length();
+	    byte[] data = new byte[len / 2];
+	    for (int i = 0; i < len; i += 2) {
+	        data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+	                             + Character.digit(s.charAt(i+1), 16));
+	    }
+	    return data;
+	}
+	void deliverFileToTalkWindow(String content) throws FileNotFoundException, IOException {
+		StringTokenizer tokenizer = new StringTokenizer(content, "#");
+		int fileLen = Integer.valueOf(tokenizer.nextToken());
+		String fileName = tokenizer.nextToken();
+		String senderID = tokenizer.nextToken();
+		String myID = tokenizer.nextToken();
+		int fileStartIdx = findCharacterIdx(content,'.',2)+1;
+		int bytesRead=0;
+		BigInteger a=null;
+		byte[] byteArr=null;
+		String fileContent = content.substring(fileStartIdx);
+		FileOutputStream fos = new FileOutputStream(new File(fileName));
+		BufferedOutputStream bos = new BufferedOutputStream(fos);
+		
+	//	byte[] bytes = new java.math.BigInteger(hexText, 16).toByteArray();
+		JOptionPane.showInputDialog("In deliverFileToTalkWindow:: fileLen: "+ fileLen);
+		byteArr=hexStringToByteArray(fileContent);
+		 fos.write(byteArr);
+		 fos.flush();
+		 fos.close();
+		 System.out.println(byteArr);
+		
+	}
 	void deliver1to1MessageToTalkWindow(String content) {
 		StringTokenizer tokenizer = new StringTokenizer(content, ".");
 		String from = tokenizer.nextToken();
-		int startIdx = findDotIdx(content, 1);
+		int startIdx = findCharacterIdx(content,'.', 1);
 		String message = content.substring(startIdx + 1, content.length());
 		
 		mPacketArrived = true;
@@ -238,45 +368,145 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 			talkWindow.deliverNewMessage(from,message);
 	}
 
-	void recvFile(String content) {
-		StringTokenizer tokenizer = new StringTokenizer(content, ".");
-		String sender = tokenizer.nextToken();
-		String file = tokenizer.nextToken();
-		StringBuilder packet = new StringBuilder();
-		
-		//FileOutputStream = new FileOutputStream()
-	}
-
-	public void sendFile(String filePath, String receiverID) throws IOException {
-		FileInputStream fileInputStream = null;
+	
+	public static String byteArrayToHex(byte[] a) {
+				
+		   StringBuilder sb = new StringBuilder();
+		   for(byte b: a)
+		      sb.append(String.format("%02x", b));
+		   return sb.toString();
+		}
+	public synchronized void sendFileProc(File file,ArrayList<String> id_ip_port_List) throws IOException{
+		FileInputStream fin = null;
+		BufferedInputStream bin =null;
 		StringBuilder filePacket = new StringBuilder();
 		byte[] fileContent;
-
-		filePacket.append("F");
-		filePacket.append(loginID + ".");
-		filePacket.append(receiverID + ".");
-		/*
-			File file = new File(filePath);
-			fileContent = new byte[(int) file.length()];
-			fileInputStream = new FileInputStream(file);
-
-			fileInputStream.read(fileContent);
-			filePacket.append(fileContent.toString());
-			out.writeUTF(filePacket.toString());*/
-		File file = new File(filePath);
-		byte buf[] = new byte[(int)file.length()];
+		int fileLen =  (int)file.length();
+		byte buf[] = new byte[(int) fileLen];
+		ArrayList<Socket> socketList = new ArrayList<>();
+		String receiverID = id_ip_port_List.get(0);
+		String receiverIP = id_ip_port_List.get(1);
+		String receiverPort = id_ip_port_List.get(2);
+		Socket sock = null;
+		DataOutputStream out2 = null;
+		BufferedOutputStream bout = null;
+		DataInputStream din = null;
 		
-		try(InputStream in = new FileInputStream(file);) {
-	      
-	     in.read(buf);
-	     in.close();
+		filePacket.append(loginID);
+		filePacket.append("#");
+		filePacket.append(file.getName());
+		filePacket.append("#");
+		filePacket.append(String.valueOf(fileLen));
+	//	JOptionPane.showInputDialog("filePacket : " + filePacket.toString());
+	//	JOptionPane.showInputDialog("roomUserIPList: " + roomUserIPList);
+		 
+		try{
+			
+		fin = new FileInputStream(file);
+	     bin = new BufferedInputStream(fin, (int)fileLen);
+	     bin.read(buf, 0, (int)fileLen);
+	   //  filePacket.append(byteArrayToHex(buf));
+	     
 	  //   filePacket.append(c);    Q:뭔가 더 보내야하나?   A:파일제목!
-	     filePacket.append(buf.toString());
-	     out.writeUTF(filePacket.toString());
+	     
+	     //JOptionPane.showInputDialog("roomUserIPList.size() : " + roomUserIPList.size());
+	//   TalkWindow t = new TalkWindow(this,null);
+	//     for(int i=0;i<roomUserIPList.size();i+=1) {
+	 //   	 if(!idList.get(i).equals(loginWindow.loginID))
+	  //  	 {
+	    //		 JOptionPane.showInputDialog("roomUserIP: " +roomUserIPList.get(i));
+	 //   		 JOptionPane.showInputDialog("idList id:"+idList.get(i));
+	  // 		 JOptionPane.showInputDialog("loginWindow id: " + loginWindow.loginID);
+//	    		
+	    		 sock = new Socket(receiverIP,Integer.valueOf(receiverPort));
+		   // 	 socketList.add(sock);
+	    		
+		    	 out2 = new DataOutputStream(sock.getOutputStream()); 
+	    		 out2.writeUTF(filePacket.toString());
+	    		 
+	    		 
+	    		 bout = new BufferedOutputStream(out2,2048);
+		    	 din = new DataInputStream(sock.getInputStream());
+		    	 sendFile(bout, din, buf, (int)fileLen);
+		    	 
+		    	 
+		    	 
+	    //	 }
+	   //  }
+	//     oos.writeObject(filePacket.toString());
+	  //   JOptionPane.showInputDialog("In sendFile() :: fileLen: " +fileLen);
 	   }
 	   catch(IOException e) {
 	      e.printStackTrace();
 	   }
+		finally {
+			bin.close(); bin = null;
+			fin.close(); fin=null;
+			bout.close(); bout = null;
+			out2.close(); out2 = null;
+			din.close(); din = null;
+			sock.close(); sock = null;
+//			for(int i=0;i<socketList.size();i+=1)
+//			{
+//				Socket sock =	socketList.get(i);
+//				sock.close();
+//			}
+		}
+	}
+	public void sendFile(BufferedOutputStream bout, DataInputStream din, byte[] data, int fileLen) {
+		int size = 2048;
+		int count = fileLen / size;
+		int rest = fileLen % size;
+		int flag = 1;
+		String state=null;
+		
+		if(count ==0)flag=0;
+		for(int i=0;i<=count;i+=1) {
+			try {
+			if(i==count && flag == 0) {
+				bout.write(data, 0, rest);
+				bout.flush();
+				state = din.readUTF();
+				//JOptionPane.showConfirmDialog(mainMenu, state);
+				mainMenu.popUp(state);
+				return;
+			}
+			else if(i==count) {
+				bout.write(data, i*size, rest);
+				bout.flush();
+				state = din.readUTF();
+
+				mainMenu.popUp(state);
+			//	JOptionPane.showConfirmDialog(mainMenu, state);
+				return;
+			}
+			else {
+				bout.write(data, i*size, size);
+				bout.flush();
+				
+			}
+			}
+			catch(SocketException e) {
+			//	e.printStackTrace();
+				
+			}
+			catch(IOException ie) {}
+		}
+	}
+	public void sendReqIP(File file,ArrayList<String> roomUserIDList, boolean isGroup) throws IOException {
+		
+		this.file = file;
+		StringBuilder packet = new StringBuilder();
+		
+		
+		packet.append("I");
+		packet.append(loginWindow.loginID + "#");
+		for(int i=0;i<roomUserIDList.size();i+=1)
+			if(!loginID.equals(roomUserIDList.get(i)))
+				packet.append(roomUserIDList.get(i)+"#");
+		oos.writeObject(packet.toString());
+	//
+		
 	}
 			// out.write(fileContent, 0, bytesArray.length); 
 	public void addTalkWindow(ArrayList<String> friendIDList, TalkWindow talkWindow)
@@ -297,7 +527,7 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 			if(loginFailed == true)
 				break;
 			try {
-				packet = in.readUTF();
+				packet = (String) ois.readObject();
 				dispatchContent(packet);
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -318,7 +548,10 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		try {
 			socket = new Socket(serverIp, 8000);
 			out = new DataOutputStream(socket.getOutputStream());
+			oos = new ObjectOutputStream(out);
 			in = new DataInputStream(socket.getInputStream());
+			ois = new ObjectInputStream(in);
+			
 			
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
@@ -346,7 +579,7 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		return new java.awt.event.WindowAdapter() {
 			public void windowClosed(java.awt.event.WindowEvent evt) {
 				try {
-					out.writeUTF("Q");
+					oos.writeObject("Q");
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -363,42 +596,64 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		};
 	}
 
-	/*
-	 * boolean try_login(String loginID,String password_input) { boolean t = false;
-	 * try {
-	 * 
-	 * //JOptionPane.showInputDialog("here2"); sendLoginPacket(loginID,
-	 * (password_input)); // JOptionPane.showInputDialog("here3"); /* String isvalid
-	 * = in.readUTF(); // 0 or 1 // JOptionPane.showInputDialog("here4"); if
-	 * (isvalid.equals("0")) { // JOptionPane.showInputDialog(isvalid); t = false;
-	 * in.close(); out.close(); } else if (isvalid.equals("1")) { t = true; //
-	 * JOptionPane.showInputDialog(isvalid); } } catch (UnknownHostException e) { //
-	 * TODO Auto-generated catch block e.printStackTrace(); } catch (IOException e)
-	 * { // TODO Auto-generated catch block e.printStackTrace(); }
-	 * 
-	 * return t; }
-	 */
+	
 	void GetFriendList() {
 		StringBuilder message = new StringBuilder();
 		message.append("C");
-		message.append(loginID);
+		message.append(loginID );
 		// System.out.println(message);
 		try {
-			out.writeUTF(message.toString());
+			oos.writeObject(message.toString());
 			// System.out.println("E");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
+	public static String getIp()  {
+        URL whatismyip = null;
+		try {
+			whatismyip = new URL("http://checkip.amazonaws.com");
+		} catch (MalformedURLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+        BufferedReader in = null;
+        try {
+            try {
+				in = new BufferedReader(new InputStreamReader(
+				        whatismyip.openStream()));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            String ip = null;
+			try {
+				ip = in.readLine();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            return ip;
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        }
 
 	public void sendLoginPacket(String ID, String password) throws IOException { // case L
 		StringBuilder LoginPacket = new StringBuilder();
 		this.loginID = ID;
 		LoginPacket.append("L");
-		LoginPacket.append(ID + ".");
-		LoginPacket.append(password);
-		out.writeUTF(LoginPacket.toString());
+		LoginPacket.append(ID + "#");
+		LoginPacket.append(password + "#");
+		LoginPacket.append(InetAddress.getLocalHost().getHostAddress());
+		oos.writeObject(LoginPacket.toString());
 	}
 
 	public void AddFriend(String loginID, String friendId) {
@@ -409,7 +664,7 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		searchPacket = searchPacket.concat(loginID);
 
 		try {
-			out.writeUTF(searchPacket);
+			oos.writeObject(searchPacket);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -424,7 +679,7 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		searchPacket = searchPacket.append(loginID);
 
 		try {
-			out.writeUTF(searchPacket.toString());
+			oos.writeObject(searchPacket.toString());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -438,7 +693,7 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		searchPacket = searchPacket.concat(loginID);
 
 		try {
-			out.writeUTF(searchPacket);
+			oos.writeObject(searchPacket);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -466,7 +721,7 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		String name;
 		String age ;
 		String phoneNum;
-		System.out.println("In loadFriendInfoFromServer:: ");
+		
 		while(friendListTokenizer.hasMoreTokens())
 		{
 			record = new String[6];
@@ -477,7 +732,7 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 			phoneNum = friendListTokenizer.nextToken();
 			record = new String[] { ID, null, null, name, age, phoneNum};
  			friendInfo_list.add( record );  
-			System.out.println("loadFriendInfoFromServer:: Added ID: " + ID);
+		//	System.out.println("loadFriendInfoFromServer:: Added ID: " + ID);
 		}
 		for(String[] rec : friendInfo_list) {
 
@@ -486,29 +741,7 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 			//friendInfo_list.add(rec);
 		}
 		friendTab.setBorderText(friendInfo_list.size());
-//		border = BorderFactory.createTitledBorder("친구목록" + "(" + friendInfoList.size() + ")");
-//		scroll.setBorder(border); // 경계 설정
-		
-		/* 수업에서  아래(BOTTOM)와 같이 소스작성하지말고, 위(UP)와 같이 소스 작성하라고 함.
-			while (true) {
-				record = new String[6];
-				for (int i = 0; i < 6; i += 1) {
-					if (i == passwordField.ordinal())
-						continue;
-					try {
-						record[i] = friendListTokenizer.nextToken();
-					} catch (NoSuchElementException e) {
-						escape = true;
-						break;
-					}
-				}
-				if (escape == true)
-					break;
-				dlm.add(record[0]);
-				friendID_list.add(record[0]);
-				friendInfo_list.add(record);
-			}
-		mainMenu.getFriendTab().setBorder();*/
+
 	}
 
 	void loadMyInfoFromServer(String content, SettingTab settingTab) {
@@ -562,7 +795,7 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		packet.append(talkCompanion + ".");
 		 packet.append(text);
 	
-		out.writeUTF(packet.toString());
+		oos.writeObject(packet.toString());
 		
 		return packet.toString();
 	}
@@ -573,11 +806,11 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		packet.append("G");
 		packet.append("#");
 		packet.append(String.valueOf(chatRoomNumber));
-		packet.append("#" + loginID );
+		packet.append("#" + loginWindow.loginID );
 		for(int i=0;i<talkCompanions.size();i+=1)
 			packet.append("#"+talkCompanions.get(i));
 		packet.append("#."+text);
-		out.writeUTF(packet.toString());
+		oos.writeObject(packet.toString());
 		return packet.toString();
 	}
 	
@@ -591,7 +824,7 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 			packet.append(regContent.getRegName() + ".");
 			packet.append(regContent.getRegAge() + ".");
 			packet.append(regContent.getRegPhone() + ".");
-			out.writeUTF(packet.toString());
+			oos.writeObject(packet.toString());
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -620,7 +853,7 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 			packet.append(editContent.getPassword() + ".");
 			packet.append(editContent.getName() + ".");
 			packet.append(editContent.getPhone());
-			out.writeUTF(packet.toString());
+			oos.writeObject(packet.toString());
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -637,9 +870,6 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		// TODO Auto-generated method stub
 		
 	}
-	public void sendFile(File file) {
-		// TODO Auto-generated method stub
-		
-	}
+	
 
 }

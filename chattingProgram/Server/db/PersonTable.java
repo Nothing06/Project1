@@ -25,7 +25,8 @@ public class PersonTable{
 	Connection con;
 	PreparedStatement pstmt=null;
 	ResultSet rs=null;
-	String str[] = {"id","password","emp_no", "이름", "나이", "전화번호"};
+	public String[] columnNameArr = {"id","password","emp_no", "name", "age", "tel"};
+	
 	public PersonTable()
 	{
 	//	model = new DefaultTableModel(customerList,str);
@@ -53,14 +54,16 @@ public class PersonTable{
 			System.out.println("DB접속오류"+e);
 		}
 	}
-	public void update(String loginID,String sql)
+	public void update(String sql,String[] tuple,int tuple_idx,boolean[] bEdit)
 	{
 		PreparedStatement stm=null;
 		System.out.println(sql);
 		try {
 			stm = (PreparedStatement) con.prepareStatement(sql);
 			stm.executeUpdate(sql);
-			
+			for(int i=0;i<tuple.length;i+=1)
+				if(bEdit[i])
+					personTable.get(tuple_idx)[i] = tuple[i];
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -105,25 +108,25 @@ public class PersonTable{
 	//	model.addRow(data);
 		person_tuplecount+=1;
 	}
-	public void loadChattingContentDB()
-	{
-		try
-		{
-			String sql = "select content from chatContent";
-			pstmt = con.prepareStatement(sql);
-			System.out.println("pstmt : " + pstmt);
-			rs = pstmt.executeQuery();
-			System.out.println("rs: "+ rs);
-			while(rs.next())
-			{
-		//		loadItem();
-			}
-		}
-		catch(Exception e)
-		{
-			System.out.println("select 실행오류: " + e);
-		}
-	}
+//	public void loadChattingContentDB()
+//	{
+//		try
+//		{
+//			String sql = "select content from chatContent";
+//			pstmt = con.prepareStatement(sql);
+//			System.out.println("pstmt : " + pstmt);
+//			rs = pstmt.executeQuery();
+//			System.out.println("rs: "+ rs);
+//			while(rs.next())
+//			{
+//		//		loadItem();
+//			}
+//		}
+//		catch(Exception e)
+//		{
+//			System.out.println("select 실행오류: " + e);
+//		}
+//	}
 	public void loadFriendInfoDB() // 2018 03 17 오전 1:14  서버에서 DB내용을 메모리에 로드해주고 실시간으로 변경해줘야됨
 	{
 		try

@@ -4,9 +4,12 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
@@ -14,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Scanner;
 import java.util.StringTokenizer;
 
 import Packet.PacketHeader;
@@ -22,25 +26,43 @@ import loginMenu.RegContent;
 enum personTableField{id,password,emp_no,name,age,tel};
 public class ClientThreadManager extends Thread{
 	Socket socket;
-	DataInputStream in;
-	DataOutputStream out;
-	HashMap clients;
+	DataInputStream dis;
+	DataOutputStream dos;
+	ObjectOutputStream oos;
+	ObjectInputStream ois;
+	HashMap client_oos;
+	HashMap client_ois;
 	String clientID=null;
+	String clientIP = null;
 	PersonTable db_person;
 	RegContent newMemberInfo;
 	String workspace = "C:\\Users\\user\\git\\Project1\\chattingProgram\\FriendListFileDir\\";
 	personTableField passwordField = personTableField.valueOf("password");
-	
+	static HashMap<String,String> clientIPList ;
+	static String ipPkt;
+	int waitClientCnt=0;
+	int waitClientIdx=0;
+//	int pPacketReceivedCnt = 0;
+	int pPacketReceivedCnt=0;
+	int pPacketSentCnt = 0;;
+	static ArrayList<String> pPacketList;
+	static int columnCnt=6;
+	static {
+		clientIPList = new HashMap<>();
+	}
 	@SuppressWarnings("unchecked")
-	ClientThreadManager(Socket socket, PersonTable db_person,HashMap clients)
+	ClientThreadManager(Socket socket, PersonTable db_person,HashMap client_oos,HashMap client_ois)
 	{
 		this.socket =socket;
 		this.db_person = db_person;
-		this.clients = clients;
-	
+		this.client_oos = client_oos;
+		this.client_ois = client_ois;
+		
 		try {
-			in = new DataInputStream(socket.getInputStream());
-			out = new DataOutputStream(socket.getOutputStream());
+			dis = new DataInputStream(socket.getInputStream());
+			ois = new ObjectInputStream(dis);
+			dos = new DataOutputStream(socket.getOutputStream());
+			oos = new ObjectOutputStream(dos);
 			
 		}catch(IOException e)
 		{
@@ -101,14 +123,18 @@ public class ClientThreadManager extends Thread{
 	public void reply(String packet)
 	{
 		String content=null;
+		if(packet!=null)
 			content = packet.substring(1,packet.length());
-	//	System.out.println(message);
+		System.out.println(packet);
 		boolean idfound = false;
 		String path = null;
 		BufferedReader reader = null;
 		BufferedWriter writer = null;
 		String clientID = null;
+		
 		String dbCommand =null;
+		String ipPacket = null;
+		
 		
 		//System.out.println("Here1");
 		String loginID="";
@@ -136,13 +162,27 @@ public class ClientThreadManager extends Thread{
 		case PacketHeader.editProfile:
 			editUserProfile(content);
 			break;
-		case PacketHeader.sendFile:
+		case PacketHeader.sendReqIP:
 			try {
-				deliverFileToClient(content);
-			} catch (IOException e1) {
+				
+			//	sendReceiveFileStartSignal(content);
+				
+				pPacketSentCnt= makeIPPacket_SendSignal(content);
+				
+			//	ipPkt = new String(ipPacket);
+				System.out.println("case I) ipPkt: " + ipPkt);
+			} catch (IOException e2) {
 				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				e2.printStackTrace();
 			}
+			break;
+		case PacketHeader.sendFile:
+//			try {
+//				//deliverFileToClient(content);
+//			} catch (IOException e1) {
+//				// TODO Auto-generated catch block
+//				e1.printStackTrace();
+//			}
 			break;
 		case PacketHeader.login:
 		//	System.out.println("reply() :: case L : " + content);
@@ -164,6 +204,17 @@ public class ClientThreadManager extends Thread{
 				e.printStackTrace();
 			}
 			break;
+		case 'P':
+//			pPacketList.add(content);
+//			while(pPacketList.size() < pPacketSentCnt) {
+//				
+//			}
+		//	System.out.println("case P) ipPkt: " + ipPkt);
+		//	if(pPacketReceivedCnt == pPacketSentCnt) 
+			{
+				sendIPPortPacket(content);
+			}
+			break;
 		case 'Q':
 			
 			break;
@@ -178,61 +229,183 @@ public class ClientThreadManager extends Thread{
 			break;
 		}
 	}
+	//여기확인해보기//
+	private void sendReceiveFileStartSignal(String sender,ArrayList<String> clientIDList) throws IOException {
+		StringBuilder pkt=new StringBuilder();
+		pkt.append("Z");
+		pkt.append(sender);
+		System.out.println("clientIDList: " + clientIDList);
+		//clientIDList.size()나 안의 객체값이 의심된다.
+//		for(int i=0;i<clientIDList.size();i+=1)
+		{
+			
+			ObjectOutputStream oos = (ObjectOutputStream)client_oos.get(clientIDList.get(0));
+			if(oos!=null)
+			{	
+				System.out.println("In sendReceiveFileStartSignal : " + pkt.toString());
+				oos.writeObject(pkt.toString());
+			}
+		}
+		//waitClientCnt = clientIDList.size();
+	}
+	private void sendIPPortPacket(String content) {
+	//	StringTokenizer packetTokenizer = new StringTokenizer(packet, "@");
+		String id;
+		StringTokenizer id_ip_port = new StringTokenizer(content,"#");
+	//	StringTokenizer portTokenizer = new StringTokenizer(content,"#");
+	//	String srchID = portTokenizer.nextToken();
+		StringBuilder pkt = new StringBuilder();
+//		System.out.println(packet);
+		String ip;
+		String port;
+		String senderID;
+		
+		Scanner sc = new Scanner(System.in);
+		
+//		System.out.println(" In sendIPPacket()");
+//		System.out.println("content: " + content);
+//		System.out.println("packet: " + packet);
+
+		pkt.append("I");
+		senderID = id_ip_port.nextToken();
+		pkt.append(id_ip_port.nextToken()+"#");
+		pkt.append(id_ip_port.nextToken()+"#");
+		pkt.append(id_ip_port.nextToken()+"#");
+//		while(idPartTokenizer.hasMoreTokens()) {
+//			
+//			id = idPartTokenizer.nextToken();
+//			ip = ipPartTokenizer.nextToken(); //packet구조 바꾸는중
+//			if(id.equals(srchID)) {
+//				pkt.append(id+"#");
+//				pkt.append(ip+"#");
+//				pkt.append(portTokenizer.nextToken() + "#");
+//			}
+//		}
+//		while(st.hasMoreTokens()) {
+//			
+//			id = st.nextToken();
+//			System.out.println(id);
+//			pkt.append(id+"#");
+//			
+//			token = st.nextToken();
+//			System.out.println(token);
+//			pkt.append(token+"#");
+//			
+//			st2.nextToken();
+//			token = st2.nextToken();
+//			System.out.println(token);
+//			pkt.append(token +"#");
+//		}
+		System.out.println("In sendIPPacket: " + pkt);
+		try {
+				((ObjectOutputStream)client_oos.get(senderID)).writeObject(pkt.toString());
+			//	sc.nextLine();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	private int makeIPPacket_SendSignal(String content) throws IOException {
+		// TODO Auto-generated method stub
+		StringTokenizer tokenizer = new StringTokenizer(content,"#");
+		ArrayList<String> clientIDList = new ArrayList<>();
+		ArrayList<String> idportList = new ArrayList<>();
+		String senderID;
+		int pPacketReceiveCnt=0;
+		StringBuilder packet = new StringBuilder();
+		//packet.append("I");
+		senderID = tokenizer.nextToken();
+		packet.append(senderID + "#");
+		while(tokenizer.hasMoreTokens()) {
+			clientID = tokenizer.nextToken();
+			System.out.println("clientID: " + clientID);
+			clientIDList.add(clientID);
+			packet.append(clientID + "#");
+			
+		
+		}
+		packet.append("@");
+	//저기 case I)에서 왜 IP부분이 null이 나왔을까 생각해보기...
+	//	for(int i=0;i<clientIDList.size();i+=1)
+		{
+			packet.append(clientIPList.get(clientIDList.get(0)) + "#");
+		}
+		pPacketReceiveCnt = clientIDList.size();
+		sendReceiveFileStartSignal(senderID, clientIDList);
+		System.out.println("In makeIPPacket_SendSignal: " + packet.toString());
+		
+		return pPacketReceiveCnt;
+	}
+	int getTupleIndex(String id) {
+		int tupleIdx=-1;
+		for(int i=0;i<db_person.personTable.size();i+=1) // get TupleIndex from db_person
+		{
+			if(db_person.personTable.get(i)[0].equals(id))
+			{
+				tupleIdx = i;
+				break;
+			}
+		}
+		return tupleIdx;
+	}
 	private void editUserProfile(String content) {
 		// TODO Auto-generated method stub
 		// id, passwd, name, phoneNum
 		int i=0;
-		int personTable_idx=-1;
-		String sqlsrc="update person set ";
-		String sql="update person set ";
-		StringTokenizer editContent = new StringTokenizer(content, ".");
-		String attributeName[] = {"id","password", "name","tel"};
-		String[] attributeValue = new String[4];
+		int tableTupleIdx=-1;
+		int columnNameArr_idx=0;
+	
+		StringTokenizer editPacketTokenizer = new StringTokenizer(content, ".");
+		
+								// {"id","password","emp_no", "name", "age", "tel"};
+		String[] tuple = new String[columnCnt];
 		int changedColumnCnt=0;
-		while(editContent.hasMoreTokens())
+		String id = editPacketTokenizer.nextToken();
+		boolean bEditable[] = {false, true, false, true, false, true};
+		
+		
+		while(editPacketTokenizer.hasMoreTokens())
 		{
-			attributeValue[i] = editContent.nextToken();
+			if(bEditable[i])
+			{
+				tuple[i] = editPacketTokenizer.nextToken();
+			}
+			else
+				tuple[i] = null;
 			i+=1;
 		}
 		
-		
-		for(i=0;i<db_person.personTable.size();i+=1)
+		tableTupleIdx = getTupleIndex(id);
+		editPersonTableTuple(tableTupleIdx, tuple);
+		editQuery(tableTupleIdx, tuple, changedColumnCnt, id);
+	}
+	private void editQuery( int tableTupleIdx,String[] tuple,
+			int changedColumnCnt, String id) {
+		String attributeName[] = {"id","password", "emp_no","name","age","tel"};
+		String sqlsrc="update person set ";
+		String sql="update person set ";
+		boolean bEdit[] = new boolean[columnCnt];
+		for(int x=0;x<columnCnt;x+=1)
 		{
-			if(db_person.personTable.get(i)[0].equals(attributeValue[0]))
+			if(tuple[x]!=null)
 			{
-				personTable_idx = i;
-				break;
-			}
-		}
-		
-		int attributeValue_idx=1;
-		for(i=0;i<6;i+=1)
-		{
-			if(i%2==1) // password, name, tel Index:  1, 3, 5
-			{
-				if(!attributeValue[attributeValue_idx].equals("#"))
+				if(tuple[x].equals("#"))
 				{
-					db_person.personTable.get(personTable_idx)[i] = attributeValue[attributeValue_idx];
+					bEdit[x]=false;
+					continue;
 				}
-				attributeValue_idx+=1;
-			}
-		}
-		for(int x=1;x<4;x+=1)
-		{
-			if(attributeValue[x].equals("#"))
-			{
-				continue;
-			}
-			else
-			{
-				if(changedColumnCnt > 0)
-					sql+=",";
-				sql += attributeName[x];
-				sql += "='";
-				sql += attributeValue[x];
-				sql += "'";
-				changedColumnCnt+=1;
-				System.out.println("aN: " + attributeName[x] + " aV:" + attributeValue[x]);
+				else
+				{
+					if(changedColumnCnt > 0)
+						sql+=",";
+					sql += attributeName[x];
+					sql += "='";
+					sql += tuple[x];
+					sql += "'";
+					changedColumnCnt+=1;
+					bEdit[x] = true;
+					System.out.println("aN: " + attributeName[x] + " aV:" + tuple[x]);
+				}
 			}
 		}
 		if(sql.equals(sqlsrc))
@@ -243,31 +416,54 @@ public class ClientThreadManager extends Thread{
 		else {
 			sql+=" where id=";
 			sql+="'";
-			sql+=attributeValue[0];
+			sql+=id;
 			sql+="'";
-			db_person.update(attributeValue[0],sql);
+			db_person.update(sql,tuple,tableTupleIdx,bEdit);
 			System.out.println("editted Profile Info.");
 		}
 	}
+	private void editPersonTableTuple(int tupleIdx, String[] tuple) {
+		int i;
+		for(i=0;i<6;i+=1)
+		{
+			//if(i%2==1) // password, name, tel Index:  1, 3, 5
+			if(tuple[i]!=null) {
+					if(tuple[i].equals("#")==false) // # is blank(In class editContent,
+																		// uneditted content value is "#")
+					{
+						db_person.personTable.get(tupleIdx)[i] = tuple[i];
+					}
+			}
+		}
+	}
+	
 	private void sendLoginFlag(String content) {
 		String loginID;
 		String loginPassword;
-		StringTokenizer loginContent = new StringTokenizer(content, ".");
+		String loginIP;
+		StringTokenizer loginContent = new StringTokenizer(content, "#");
 		try {
 			loginID = loginContent.nextToken(); System.out.println("LoginID: " + loginID);
 			loginPassword = loginContent.nextToken(); System.out.println("LoginPassword: " + loginPassword);
+			loginIP = loginContent.nextToken(); System.out.println("Login Client IP: " + loginIP);
+			
 			if(checkIfRegistered(db_person, loginID,loginPassword))
 			{
 				clientID = new String(loginID);
-				clients.put(clientID, out);
-				out.writeUTF("L1");
+				clientIP = new String(loginIP);
+				client_oos.put(clientID, oos);
+				client_ois.put(clientID,ois);
+				clientIPList.put(clientID,clientIP);
+				
+					System.out.println("clientIPList[]" + clientIPList.get(clientID));
+				oos.writeObject("L1");
 				System.out.println("login id: " + loginID);
 				System.out.println("login password: " + loginPassword);
 				System.out.println("sent login success flag.");
 			}
 			else
 			{
-				out.writeUTF("L0");
+				oos.writeObject("L0");
 				System.out.println("Sent login Failed Flag.");
 				//in.close();
 				//out.close();
@@ -370,8 +566,8 @@ public class ClientThreadManager extends Thread{
 				}
 			}
 		}
-		//System.out.println(clientFriendListInfoPkt.toString());
-		out.writeUTF(clientFriendListInfoPkt.toString());
+		System.out.println(clientFriendListInfoPkt.toString());
+		oos.writeObject(clientFriendListInfoPkt.toString());
 	}
 	private void saveAndSendClientInfo(PersonTable db_person, String tryingAddID, boolean save) { // case A,S
 		String clientID;
@@ -409,7 +605,7 @@ public class ClientThreadManager extends Thread{
 		if(idfound== true)
 		{
 			try {
-				out.writeUTF(friendInfo.toString());
+				oos.writeObject(friendInfo.toString());
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -419,9 +615,9 @@ public class ClientThreadManager extends Thread{
 		{
 			try {
 				if(save==true)
-					out.writeUTF("A.....");
+					oos.writeObject("A.....");
 				else
-					out.writeUTF("S.....");
+					oos.writeObject("S.....");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -451,12 +647,12 @@ public class ClientThreadManager extends Thread{
 			e1.printStackTrace();
 		}
 	}
-	int findDotIdx(String content, int dot_seq) //dot_seq: 1부터 시작
+	int findCharacterIdx(String content, int character, int dot_seq) //dot_seq: 1부터 시작
 	{
 		int dot_cnt=0;
 		for(int i=0;i<content.length();i+=1)
 		{
-			if(content.charAt(i)=='.')
+			if(content.charAt(i)==character)
 			{
 				dot_cnt+=1;
 				if(dot_cnt== dot_seq)
@@ -467,23 +663,44 @@ public class ClientThreadManager extends Thread{
 	}
 	private void deliverFileToClient(String content) throws IOException
 	{
-		StringTokenizer tokenizer = new StringTokenizer(content, ".");
+		int fileStartIdx = findCharacterIdx(content,'.', 2)+1;
+		StringTokenizer tokenizer = new StringTokenizer(content, "#");
+		String fileLen = tokenizer.nextToken();
+		String fileName = tokenizer.nextToken();
+		
 		String sender = tokenizer.nextToken();
-		String receiver = tokenizer.nextToken();
-		String file = tokenizer.nextToken();
-		StringBuilder packet = new StringBuilder();
+		StringBuilder packet;// = new StringBuilder();
+		String packetInfoBeforeReceiver;
+		String receiverID;// = tokenizer.nextToken();
+		ArrayList<String> receiverIDList=new ArrayList<>();
 		
-		packet.append("F");
-		packet.append(sender+".");
-		packet.append(file);
+		packet = new StringBuilder();
+		packet.append("F" + fileLen + "#" );
+		packet.append(fileName + "#" + sender + "#");
+		packetInfoBeforeReceiver = packet.toString();
 		
-		DataOutputStream out = (DataOutputStream)clients.get(receiver);
-		out.writeUTF(packet.toString());
+		
+		while(tokenizer.hasMoreTokens())
+		{
+			receiverID = tokenizer.nextToken();
+			receiverIDList.add(receiverID);
+		}
+		String pkt = null;
+		for(int i=0;i<receiverIDList.size();i+=1) {
+			ObjectOutputStream oos = (ObjectOutputStream)client_oos.get(receiverIDList.get(i));
+			if(oos!=null)
+			{	
+				pkt = packetInfoBeforeReceiver + receiverIDList.get(i) + "#." + content.substring(fileStartIdx);
+				oos.writeObject(pkt);
+				System.out.println("Sent file to " + receiverIDList.get(i) + ".");
+			}
+			
+		}
 		
 	}
 	private void deliverChatMessage_1toN(String content) throws IOException
 	{
-		int messageFirstIdx = findDotIdx(content,1)+1;
+		int messageFirstIdx = findCharacterIdx(content,'.',1)+1;
 		String subContent = content.substring(0,messageFirstIdx-1);
 		StringTokenizer tokenizer = new StringTokenizer(subContent,"#");
 		String chatRoomNumber = tokenizer.nextToken();
@@ -501,20 +718,11 @@ public class ClientThreadManager extends Thread{
 		receivers.add(token);
 			//personCnt+=1;
 		}
-		/*
-		packet.append("G"+"#");
-		packet.append(chatRoomNumber + "#");
-		packet.append(sender+"#");
-		for(int x=0;x<receivers.size();x+=1)
-		{
-			packet.append(receivers.get(x) + "#");
-		}
-		packet.append("." + message);*/
 		
-		DataOutputStream[] out = new DataOutputStream[receivers.size()];
+		ObjectOutputStream[] out = new ObjectOutputStream[receivers.size()];
 		for(int i=0;i<receivers.size();i+=1) {
 			
-				out[i] = (DataOutputStream)clients.get(receivers.get(i));
+				out[i] = (ObjectOutputStream)client_oos.get(receivers.get(i));
 				if(out[i] == null)
 				{
 			//		out[i].writeUTF("G" + sender +".이 로그인하지 않았습니다.");
@@ -522,7 +730,7 @@ public class ClientThreadManager extends Thread{
 				else
 				{
 					if(!receivers.get(i).equals(sender)) 
-						out[i].writeUTF("G"+content); //클라이언트대화창 , 클라이언트에서 메세지받을 작업 구현
+						out[i].writeObject("G"+content); //클라이언트대화창 , 클라이언트에서 메세지받을 작업 구현
 				
 				}
 		}
@@ -535,21 +743,21 @@ public class ClientThreadManager extends Thread{
 		String sender = tokenizer.nextToken();
 		String receiver = tokenizer.nextToken();
 		StringBuilder packet = new StringBuilder(); // server에서 client로 보낼 패킷 
-		int	messageFirstIdx = findDotIdx(content, 2)+1;
+		int	messageFirstIdx = findCharacterIdx(content,'.', 2)+1;
 		String message = content.substring(messageFirstIdx, content.length());
-		DataOutputStream out;
-		out = (DataOutputStream)clients.get(receiver);
+		ObjectOutputStream out;
+		out = (ObjectOutputStream)client_oos.get(receiver);
 		
 		if(out == null)
 		{
-			out.writeUTF("M" + sender +".이 로그인하지 않았습니다.");
+			out.writeObject("M" + sender +".이 로그인하지 않았습니다.");
 		}
 		else
 		{
 			packet.append("M");
 			packet.append(sender+".");
 			packet.append(message);
-			out.writeUTF(packet.toString()); //클라이언트대화창 , 클라이언트에서 메세지받을 작업 구현
+			out.writeObject(packet.toString()); //클라이언트대화창 , 클라이언트에서 메세지받을 작업 구현
 		}
 	}
 	private void sendUserInfo(String content)
@@ -571,7 +779,7 @@ public class ClientThreadManager extends Thread{
 			}
 		}
 		try {
-			out.writeUTF(userInfoPacket.toString());
+			oos.writeObject(userInfoPacket.toString());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -584,10 +792,10 @@ public class ClientThreadManager extends Thread{
 		String message=null;
 		
 		try {
-				while(in!=null)
+				while(ois!=null)
 				{
 					try {
-					message = in.readUTF();
+					message = (String) ois.readObject();
 					System.out.println("* Server message: " + message);
 					}
 					catch(SocketException e)
@@ -595,6 +803,10 @@ public class ClientThreadManager extends Thread{
 					//	e.printStackTrace();
 						System.out.println(clientID + "님께서  서버와의 연결을 종료하였습니다.");
 						break;
+					}
+					catch(EOFException e)
+					{
+						
 					}
 					
 				//	System.out.println("Message: " + message);

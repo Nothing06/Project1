@@ -3,15 +3,16 @@ package mainMenu;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
-import loginMenu.LoginWindow;
 import utility.NetworkLib;
+import utility.ReceiveFile;
 
 
 
@@ -32,8 +33,21 @@ public class MainMenu extends JFrame implements ActionListener{
 //	public static Socket socket;
 	private String loginID;
 	NetworkLib networkLib;
-	
-	
+	ReceiveFile rf;
+	public	void popUp(char c) {
+		JOptionPane.showInputDialog(c);
+	}
+ public	void popUp(String str) {
+		JOptionPane.showInputDialog(str);
+	}
+ public	void popUp(ArrayList<String> str) {
+		JOptionPane.showInputDialog(str);
+	}
+// 	public void createServer() {
+// 		rf = new ReceiveFile(this);
+// 		
+// 	//	rf.setVisible(true);
+// 	}
 	public MainMenu(NetworkLib networkLib, String ID) {
 		this.loginID = ID;
 		this.networkLib = networkLib;

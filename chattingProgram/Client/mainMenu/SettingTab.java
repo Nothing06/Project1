@@ -230,18 +230,20 @@ class EditProfileDialog extends JDialog implements ActionListener {
 	}
 	boolean checkEditInfo_Ok()
 	{
+		String password;
 		editContent = new EditContent();
 		
 		
 		if(!txtArr[0].getText().equals(""))
 		{
-			if(!inputChecker.checkPassword(((JPasswordField)txtArr[0]).getPassword().toString()))
+			password= new String( ((JPasswordField)txtArr[0]).getPassword()) ;
+			if(!inputChecker.checkPassword(password))
 			{
 				JOptionPane.showInputDialog("비밀번호는 7글자 이상이여야합니다.");
 				return false;
 			}
 			
-			editContent.setPassword(((JPasswordField)txtArr[0]).getPassword().toString());
+			editContent.setPassword(password);
 		}
 		else
 		{

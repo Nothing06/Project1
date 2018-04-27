@@ -49,6 +49,7 @@ public class TalkWindow extends JFrame implements ActionListener {
 	ArrayList<JLabel> textlist = new ArrayList<>();
 	HashMap<Integer,TalkWindow> chatRoomHashMap = new HashMap();
 	HashMap<String, TalkWindow> talkList;
+	File file;
 	
 	WindowAdapter windowCloseEvent() {
 		return new WindowAdapter() {
@@ -163,6 +164,7 @@ public class TalkWindow extends JFrame implements ActionListener {
 		messageInput_scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER );
 		messageInput_scroll.setPreferredSize(new Dimension(300,50));
 		textPanel.add(messageInput_scroll);
+		inputPanel.add(fileBtn, BorderLayout.WEST);
 		inputPanel.add(textPanel, BorderLayout.CENTER);
 		inputPanel.add(buttonPanel, BorderLayout.EAST);
 	}
@@ -186,15 +188,21 @@ public class TalkWindow extends JFrame implements ActionListener {
 		}
 		else if(e.getSource() == fileBtn) {
 			
-			chooseAndSendFile();
+			file = getFile();
+			try {
+				networkLib.sendReqIP(file, roomUserIDList , false); // file을 보내기 위해  보낼 클라이언트들의 ip주소를 먼저 얻어온다. 얻어온 후  file을 보낸다.  
+				//networkLib.sendFile(, roomUserIDList, false);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
 	}
-	public File chooseAndSendFile() {
+	public File getFile() {
 		JFileChooser fc = new JFileChooser();
 		int returnVal = fc.showOpenDialog(this);
 		File file = fc.getSelectedFile();
 		
-		networkLib.sendFile(file);
 		return file;
 	}
 	public void showLogInvitation(String from ) {
