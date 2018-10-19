@@ -9,9 +9,6 @@ import java.util.ArrayList;
 
 import javax.swing.JTable;
 
-import com.mysql.jdbc.Statement;
-
-import loginMenu.RegContent;
 
 public class PersonTable{
 
@@ -43,15 +40,68 @@ public class PersonTable{
 	{
 		try
 		{
-			Class.forName("com.mysql.jdbc.Driver");
-			String url="jdbc:mysql://localhost:3306/jdbctest";
-			con = DriverManager.getConnection(url,"root","cs%s920026");
+			Class.forName("com.mysql.cj.jdbc.Driver");
+			String url="jdbc:mysql://localhost:3306/jdbctest?serverTimezone=UTC";
+			con = DriverManager.getConnection(url,"root","didgnstm61");
 			System.out.println("立加: "+con);
 			
 		}
 		catch(Exception e)
 		{
 			System.out.println("DB立加坷幅"+e);
+		}
+	}
+	public ArrayList<String> select(String sql) {
+		ArrayList<String> attributeList = new ArrayList<String>();
+		PreparedStatement pstm = null;
+		ResultSet rs=null;
+		int columnIdx=1; //1何磐 矫累
+		int nData=0;
+		String data=""; 
+		try {
+			pstm = (PreparedStatement)con.prepareStatement(sql);
+			rs = pstm.executeQuery(sql);
+			
+			while(rs.next())
+			{
+				
+				if(columnIdx == 3 || columnIdx == 5) {
+					nData = rs.getInt(columnIdx);
+					System.out.print(nData + ", ");
+					//columnIdx+=1;
+					attributeList.add(String.valueOf(nData));
+				}
+				else	{
+					data = rs.getString(columnIdx);
+					System.out.print(data + ", ");
+					//columnIdx+=1;
+					attributeList.add(data);
+				}
+				columnIdx+=1;
+			}
+			
+		}
+		catch(SQLException e) {System.out.println();
+		e.printStackTrace();}
+		
+		return attributeList;
+	}
+	public void update(String sql) {
+		PreparedStatement stm=null;
+		System.out.println(sql);
+		try {
+			stm = (PreparedStatement) con.prepareStatement(sql);
+			stm.executeUpdate(sql);
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			  try {
+				stm.close();
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
 	}
 	public void update(String sql,String[] tuple,int tuple_idx,boolean[] bEdit)
@@ -131,7 +181,7 @@ public class PersonTable{
 	{
 		try
 		{
-			String sql = "select id,password,emp_no,name,age,tel from person order by id";
+			String sql = "select id,password,emp_no,name,age,tel,friendIDList from person order by id";
 			pstmt = con.prepareStatement(sql);
 			System.out.println("pstmt : " + pstmt);
 			rs = pstmt.executeQuery();
@@ -175,7 +225,8 @@ public class PersonTable{
 		String name=rs.getString("name");
 		int age = rs.getInt("age");
 		String tel = rs.getString("tel");
-		String tmp[] = new String[6];
+		String friendIDList = rs.getString("friendIDList");
+		String tmp[] = new String[7];
 		
 		tmp[0] = id;
 		tmp[1] = password;
@@ -183,6 +234,7 @@ public class PersonTable{
 		tmp[3] = name;
 		tmp[4] =  Integer.toString(age);
 		tmp[5] = tel;
+		tmp[6] = friendIDList;
 		personTable.add(tmp);
 //		customerList[tuple_cnt][0] = id;
 //		customerList[tuple_cnt][1] = password;
@@ -193,6 +245,7 @@ public class PersonTable{
 		
 //	model.addRow(data);
 		person_tuplecount+=1;
-		System.out.println(id + ", " + password + ", "+ emp_no + ", " + name + ", " + age + ", " + tel);
+		System.out.println(id + ", " + password + ", "+ emp_no + ", " + name + ", " + age + ", " + 
+								tel + "," + friendIDList);
 	}
 }

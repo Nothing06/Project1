@@ -1,4 +1,4 @@
-package chattingProg;
+package App;
 
 public interface networkLibrary {
 

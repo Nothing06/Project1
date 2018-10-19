@@ -76,7 +76,7 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 
 	// private TalkingListener talkingListener;
 	public ReceiveFile rf=null;
-	public String serverIp = "10.0.31.183";//"123.214.12.123"// "192.168.25.2";//"10.0.27.215";
+	public String serverIp = "10.0.0.74";//"192.168.0.18";//"123.214.12.123"// "192.168.25.2";//"10.0.27.215";
 	public Socket socket;
 	public DataOutputStream out;
 	public DataInputStream in;
@@ -165,7 +165,7 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		content = packet.substring(1, packet.length());
 		TalkWindow talkWindow;
 		boolean idFound;
-		
+		System.out.println("In dispatchContent() : " + packet);
 //		if(mainMenu!=null)
 //		mainMenu.popUp(content.charAt(0));
 		switch (packetType) {
@@ -177,7 +177,7 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 			mainMenu.getChattingTab().addChatRoomToList(talkWindow);
 			break;
 		case Packet.addFriend:
-			String[] friendInfoTuple = new String[6];
+			String[] friendInfoTuple = new String[7];
 			idFound = checkIfIDFound(content, friendInfoTuple);
 			if (idFound == true)
 				mainMenu.getFriendTab().addFriendToList(friendInfoTuple);
@@ -252,12 +252,13 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		StringTokenizer friendContent = new StringTokenizer(content, ".");
 		String attribute = null;
 		boolean idFound = true;
+		System.out.println("content: " + content);
 		for (int i = 0; i < 6; i += 1) {
 			if (i == 1)// passwordField skip
 				continue;
 			try {
 				friendInfoTuple[i] = friendContent.nextToken();
-
+				System.out.print(friendInfoTuple[i] + ", ");
 			} catch (NoSuchElementException e) {
 				idFound = false;
 				break;
@@ -721,16 +722,18 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		String name;
 		String age ;
 		String phoneNum;
-		
+		String friendIDList;
+		System.out.println("content: " + content);
 		while(friendListTokenizer.hasMoreTokens())
 		{
-			record = new String[6];
+			record = new String[7];
 			ID = friendListTokenizer.nextToken();
 			no = friendListTokenizer.nextToken();
 			name = friendListTokenizer.nextToken();
 			age = friendListTokenizer.nextToken();
 			phoneNum = friendListTokenizer.nextToken();
-			record = new String[] { ID, null, null, name, age, phoneNum};
+			friendIDList = friendListTokenizer.nextToken();
+			record = new String[] { ID, null, no, name, age, phoneNum, friendIDList};
  			friendInfo_list.add( record );  
 		//	System.out.println("loadFriendInfoFromServer:: Added ID: " + ID);
 		}

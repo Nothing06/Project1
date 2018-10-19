@@ -22,7 +22,7 @@ import java.util.StringTokenizer;
 
 import Packet.PacketHeader;
 import db.PersonTable;
-import loginMenu.RegContent;
+import db.RegContent;
 enum personTableField{id,password,emp_no,name,age,tel};
 public class ClientThreadManager extends Thread{
 	Socket socket;
@@ -36,7 +36,7 @@ public class ClientThreadManager extends Thread{
 	String clientIP = null;
 	PersonTable db_person;
 	RegContent newMemberInfo;
-	String workspace = "C:\\Users\\user\\git\\Project1\\chattingProgram\\FriendListFileDir\\";
+	String workspace = "C:\\Users\\syhn6\\OneDrive\\문서\\chattingApp_workspace\\chattingApp\\src\\FriendListFileDir\\";
 	personTableField passwordField = personTableField.valueOf("password");
 	static HashMap<String,String> clientIPList ;
 	static String ipPkt;
@@ -46,7 +46,7 @@ public class ClientThreadManager extends Thread{
 	int pPacketReceivedCnt=0;
 	int pPacketSentCnt = 0;;
 	static ArrayList<String> pPacketList;
-	static int columnCnt=6;
+	static int columnCnt=7;
 	static {
 		clientIPList = new HashMap<>();
 	}
@@ -145,6 +145,9 @@ public class ClientThreadManager extends Thread{
 		case PacketHeader.addFriend: // 친구아이디찾기기능  통신  // content : ID
 			saveAndSendClientInfo(db_person, content,true); // last boolean은  
 															//true면 멤버정보 보내주는것 + add/save 기능 ,  false면  멤버정보만 보내주는것
+			
+			
+			addFriend(content); // 20181018_친구추가기능 작성
 			break;
 		case PacketHeader.getUserInfo:
 			sendUserInfo(content);
@@ -152,7 +155,9 @@ public class ClientThreadManager extends Thread{
 		case PacketHeader.getFriendInfo: // 회원한명의 등록된 각각의 친구정보들을 보내줌. 
 			try {
 			//	System.out.println("reply case C:");
-				sendClientFriendListInfo(content);	}
+			//	sendClientFriendListInfo(content);	
+			    sendFriendListInfo(content);	
+				}
 			catch (IOException e1) {
 				e1.printStackTrace();	}
 			break;
@@ -228,6 +233,101 @@ public class ClientThreadManager extends Thread{
 		case '3':
 			break;
 		}
+	}
+	private void sendFriendListInfo(String content) throws IOException {
+		// TODO Auto-generated method stub
+		ArrayList<String> clientInfo = null;
+		int friendID_list_idx=0;
+		StringTokenizer st = null;// st = new StringTokenizer(, "%");
+		String clientID = content;
+		StringBuilder clientFriendListInfoPkt = new StringBuilder();
+		StringBuilder selectSql = new StringBuilder();
+		//readClientFriendInfoFromFile(clientFriendIDList); // 파일에 있는 한 고객의 친구 아이디를 전부 읽어 //ArrayList::clientFriendIDList에 저장.
+		selectSql.append("select * from person where id ='");
+		selectSql.append(clientID);
+		selectSql.append("';");
+		System.out.println("selectSql: " + selectSql.toString());
+		clientInfo = db_person.select(selectSql.toString());
+		System.out.println("clientInfo : " + clientInfo);
+		
+		clientFriendListInfoPkt.append("C");
+		if(clientInfo.size() > 0)
+		{
+//			st = new StringTokenizer(clientFriendIDList.get(0), "%");	
+//			while(st.hasMoreTokens()) {
+//				clientFriendListInfoPkt.append(st.nextToken() + ".");
+//			}
+			for(int tuple_idx=0;tuple_idx < clientInfo.size();tuple_idx+=1)
+			{
+				clientFriendListInfoPkt.append(clientInfo.get(tuple_idx) + ".");
+			}
+		}
+		System.out.println("clientFriendListInfoPkt: " + clientFriendListInfoPkt.toString());
+		oos.writeObject(clientFriendListInfoPkt.toString());
+	}
+	private void addFriend(String content) {
+		// TODO Auto-generated method stub
+		StringTokenizer st = new StringTokenizer(content,".");
+		String tryingAddID = st.nextToken();
+		String clientID = st.nextToken();
+		ArrayList<String> attributeList;
+		attributeList = db_person.select(tryingAddID);
+		if(attributeList.isEmpty())
+		{
+			try {
+		//		if(save==true)
+					oos.writeObject("A......");
+//				else
+//					oos.writeObject("S.....");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return;
+		}
+		 saveFriendID(db_person,clientID, tryingAddID);
+		sendFriendInfo(db_person,clientID,tryingAddID);
+	}
+	private boolean sendFriendInfo(PersonTable db_person2, String clientID, String tryingAddID) {
+		// TODO Auto-generated method stub
+		String sql = "select * from person where id='";
+		sql += tryingAddID;
+		sql += "';";
+		StringBuilder packet = new StringBuilder();
+		ArrayList<String> attributeValueList = new ArrayList<String>();
+		
+		attributeValueList = db_person2.select(sql);
+		try {
+			for(int i=0;i<columnCnt;i+=1) {
+				packet.append(attributeValueList.get(i));
+				packet.append(".");
+			}
+			oos.writeObject(packet.toString());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return false;
+	}
+	private void saveFriendID(PersonTable db_person2, String clientID, String tryingAddID) {
+		// TODO Auto-generated method stub
+		StringBuilder selectSql = new StringBuilder();
+		StringBuilder updateSql = new StringBuilder();
+		StringBuilder attributeList = new StringBuilder();
+		
+	//boolean[] bEdit = new boolean[] {false, false,false, false, false, false, true};
+		selectSql.append("select friendIDList from person where id='");
+		selectSql.append(clientID);
+		selectSql.append("';");
+		
+		attributeList.append((String)db_person2.select(selectSql.toString()).get(0));//(db_person2.select(selectSql.toString()).get(0);
+		attributeList.append("%");
+		attributeList.append(tryingAddID);
+		
+		updateSql.append("update table person set friendIDList='");
+		updateSql.append(attributeList.toString());
+		updateSql.append("';");
+		db_person2.update(updateSql.toString());
 	}
 	//여기확인해보기//
 	private void sendReceiveFileStartSignal(String sender,ArrayList<String> clientIDList) throws IOException {
@@ -381,7 +481,7 @@ public class ClientThreadManager extends Thread{
 	}
 	private void editQuery( int tableTupleIdx,String[] tuple,
 			int changedColumnCnt, String id) {
-		String attributeName[] = {"id","password", "emp_no","name","age","tel"};
+		String attributeName[] = {"id","password", "emp_no","name","age","tel","friendIDList"};
 		String sqlsrc="update person set ";
 		String sql="update person set ";
 		boolean bEdit[] = new boolean[columnCnt];
@@ -537,7 +637,7 @@ public class ClientThreadManager extends Thread{
 			
 		}
 	}
-	private void sendClientFriendListInfo(String clientID) throws IOException {  // case C
+	private void sendClientFriendListInfo() throws IOException {  // case C
 		// 한고객의 모든친구들의 각각 튜플내용 다 보내주기(패스워드제외)
 		ArrayList<String> clientFriendIDList = new ArrayList<>();
 		int friendID_list_idx=0;
