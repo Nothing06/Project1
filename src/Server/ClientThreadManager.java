@@ -143,7 +143,7 @@ public class ClientThreadManager extends Thread{
 		switch(packet.charAt(0))
 		{
 		case PacketHeader.addFriend: // 친구아이디찾기기능  통신  // content : ID
-			saveAndSendClientInfo(db_person, content,true); // last boolean은  
+		//	saveAndSendClientInfo(db_person, content,true); // last boolean은  
 															//true면 멤버정보 보내주는것 + add/save 기능 ,  false면  멤버정보만 보내주는것
 			
 			
@@ -237,29 +237,48 @@ public class ClientThreadManager extends Thread{
 	private void sendFriendListInfo(String content) throws IOException {
 		// TODO Auto-generated method stub
 		ArrayList<String> clientInfo = null;
+		ArrayList<String> friendIDList = new ArrayList<String>();
 		int friendID_list_idx=0;
 		StringTokenizer st = null;// st = new StringTokenizer(, "%");
 		String clientID = content;
 		StringBuilder clientFriendListInfoPkt = new StringBuilder();
 		StringBuilder selectSql = new StringBuilder();
+		StringTokenizer st2;
+		String attValue;
+		
 		//readClientFriendInfoFromFile(clientFriendIDList); // 파일에 있는 한 고객의 친구 아이디를 전부 읽어 //ArrayList::clientFriendIDList에 저장.
-		selectSql.append("select * from person where id ='");
+		selectSql.append("select friendIDList from person where id = '");
 		selectSql.append(clientID);
 		selectSql.append("';");
-		System.out.println("selectSql: " + selectSql.toString());
-		clientInfo = db_person.select(selectSql.toString());
-		System.out.println("clientInfo : " + clientInfo);
+		attValue = db_person.selectOne(selectSql.toString(), "friendIDList");
 		
+		st2  = new StringTokenizer(attValue, "%");
+		while(st2.hasMoreTokens()) {
+			friendIDList.add(st2.nextToken());
+		}
 		clientFriendListInfoPkt.append("C");
-		if(clientInfo.size() > 0)
-		{
-//			st = new StringTokenizer(clientFriendIDList.get(0), "%");	
-//			while(st.hasMoreTokens()) {
-//				clientFriendListInfoPkt.append(st.nextToken() + ".");
-//			}
-			for(int tuple_idx=0;tuple_idx < clientInfo.size();tuple_idx+=1)
+		for(int i=0;i<friendIDList.size();i+=1) {
+			selectSql = null;
+			selectSql = new StringBuilder();
+			selectSql.append("select * from person where id ='");
+			selectSql.append(friendIDList.get(i));
+			selectSql.append("';");
+			
+			System.out.println("selectSql: " + selectSql.toString());
+			clientInfo = db_person.selectAll(selectSql.toString());
+			System.out.println("clientInfo : " + clientInfo);
+			
+			
+			if(clientInfo.size() > 0)
 			{
-				clientFriendListInfoPkt.append(clientInfo.get(tuple_idx) + ".");
+	//			st = new StringTokenizer(clientFriendIDList.get(0), "%");	
+	//			while(st.hasMoreTokens()) {
+	//				clientFriendListInfoPkt.append(st.nextToken() + ".");
+	//			}
+				for(int tuple_idx=0;tuple_idx < clientInfo.size();tuple_idx+=1)
+				{
+					clientFriendListInfoPkt.append(clientInfo.get(tuple_idx) + ".");
+				}
 			}
 		}
 		System.out.println("clientFriendListInfoPkt: " + clientFriendListInfoPkt.toString());
@@ -271,7 +290,7 @@ public class ClientThreadManager extends Thread{
 		String tryingAddID = st.nextToken();
 		String clientID = st.nextToken();
 		ArrayList<String> attributeList;
-		attributeList = db_person.select(tryingAddID);
+		attributeList = db_person.selectAll(tryingAddID);
 		if(attributeList.isEmpty())
 		{
 			try {
@@ -294,9 +313,9 @@ public class ClientThreadManager extends Thread{
 		sql += tryingAddID;
 		sql += "';";
 		StringBuilder packet = new StringBuilder();
-		ArrayList<String> attributeValueList = new ArrayList<String>();
+		ArrayList<String> attributeValueList = null;
 		
-		attributeValueList = db_person2.select(sql);
+		attributeValueList = db_person2.selectAll(sql);
 		try {
 			for(int i=0;i<columnCnt;i+=1) {
 				packet.append(attributeValueList.get(i));
@@ -320,7 +339,7 @@ public class ClientThreadManager extends Thread{
 		selectSql.append(clientID);
 		selectSql.append("';");
 		
-		attributeList.append((String)db_person2.select(selectSql.toString()).get(0));//(db_person2.select(selectSql.toString()).get(0);
+		attributeList.append((String)db_person2.selectAll(selectSql.toString()).get(0));//(db_person2.select(selectSql.toString()).get(0);
 		attributeList.append("%");
 		attributeList.append(tryingAddID);
 		
@@ -336,10 +355,10 @@ public class ClientThreadManager extends Thread{
 		pkt.append(sender);
 		System.out.println("clientIDList: " + clientIDList);
 		//clientIDList.size()나 안의 객체값이 의심된다.
-//		for(int i=0;i<clientIDList.size();i+=1)
+		for(int i=0;i<clientIDList.size();i+=1)
 		{
 			
-			ObjectOutputStream oos = (ObjectOutputStream)client_oos.get(clientIDList.get(0));
+			ObjectOutputStream oos = (ObjectOutputStream)client_oos.get(clientIDList.get(i));
 			if(oos!=null)
 			{	
 				System.out.println("In sendReceiveFileStartSignal : " + pkt.toString());
@@ -426,9 +445,9 @@ public class ClientThreadManager extends Thread{
 		}
 		packet.append("@");
 	//저기 case I)에서 왜 IP부분이 null이 나왔을까 생각해보기...
-	//	for(int i=0;i<clientIDList.size();i+=1)
+		for(int i=0;i<clientIDList.size();i+=1)
 		{
-			packet.append(clientIPList.get(clientIDList.get(0)) + "#");
+			packet.append(clientIPList.get(clientIDList.get(i)) + "#");
 		}
 		pPacketReceiveCnt = clientIDList.size();
 		sendReceiveFileStartSignal(senderID, clientIDList);
@@ -765,18 +784,20 @@ public class ClientThreadManager extends Thread{
 	{
 		int fileStartIdx = findCharacterIdx(content,'.', 2)+1;
 		StringTokenizer tokenizer = new StringTokenizer(content, "#");
-		String fileLen = tokenizer.nextToken();
-		String fileName = tokenizer.nextToken();
+		
+		
 		
 		String sender = tokenizer.nextToken();
+		String fileName = tokenizer.nextToken();
+		String fileLen = tokenizer.nextToken();
 		StringBuilder packet;// = new StringBuilder();
 		String packetInfoBeforeReceiver;
 		String receiverID;// = tokenizer.nextToken();
 		ArrayList<String> receiverIDList=new ArrayList<>();
 		
 		packet = new StringBuilder();
-		packet.append("F" + fileLen + "#" );
-		packet.append(fileName + "#" + sender + "#");
+		packet.append("F" + sender + "#" );
+		packet.append(fileName + "#" + fileLen + "#");
 		packetInfoBeforeReceiver = packet.toString();
 		
 		

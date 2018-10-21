@@ -53,7 +53,7 @@ public class FileThread extends Thread {
 			dir.mkdir();
 		}
 		
-		file = new File(dir, Math.random()*100 + fileName);
+		file = new File(dir,  fileName );
 		if(file.exists()) {
 			fileNameTokenizer =new StringTokenizer(fileName, ".");
 			
@@ -61,13 +61,16 @@ public class FileThread extends Thread {
 			String fileExt;
 			fileName = fileNameTokenizer.nextToken();
 			fileExt = fileNameTokenizer.nextToken();
-			for(int i=fileNumber;i<Integer.MAX_VALUE;i+=1,fileNumber+=1)
+			if(fileNumber == Integer.MAX_VALUE)
+				fileNumber = 1;
+			
+		//	for(int i=fileNumber;i<Integer.MAX_VALUE;i+=1,fileNumber+=1)
 			{	
-				fileReName = fileName + "(" + i + ")." + fileExt ; 
+				fileReName = fileName + "(" + (fileNumber++) + ")." + fileExt ; 
 				file = new File(dir,fileReName) ;
 				if(!file.exists())
 				{
-					break;
+				//	break;
 				}
 				
 			}

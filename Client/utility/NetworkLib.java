@@ -76,7 +76,7 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 
 	// private TalkingListener talkingListener;
 	public ReceiveFile rf=null;
-	public String serverIp = "10.0.0.74";//"192.168.0.18";//"123.214.12.123"// "192.168.25.2";//"10.0.27.215";
+	public String serverIp = "10.0.5.104";//"192.168.0.18";//"123.214.12.123"// "192.168.25.2";//"10.0.27.215";
 	public Socket socket;
 	public DataOutputStream out;
 	public DataInputStream in;
@@ -212,6 +212,9 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 			break;
 		case Packet.joinMember:
 			break;
+		case '%':
+			
+			break;
 		case Packet.sendFile:
 			try {
 				deliverFileToTalkWindow(content);
@@ -330,10 +333,12 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 	}
 	void deliverFileToTalkWindow(String content) throws FileNotFoundException, IOException {
 		StringTokenizer tokenizer = new StringTokenizer(content, "#");
-		int fileLen = Integer.valueOf(tokenizer.nextToken());
-		String fileName = tokenizer.nextToken();
 		String senderID = tokenizer.nextToken();
-		String myID = tokenizer.nextToken();
+		String fileName = tokenizer.nextToken();
+		int fileLen = Integer.valueOf(tokenizer.nextToken());
+		
+		
+	//	String myID = tokenizer.nextToken();
 		int fileStartIdx = findCharacterIdx(content,'.',2)+1;
 		int bytesRead=0;
 		BigInteger a=null;
@@ -393,11 +398,14 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 		BufferedOutputStream bout = null;
 		DataInputStream din = null;
 		
-		filePacket.append(loginID);
+		filePacket.append("F");
+		filePacket.append(loginID);//shillis(파일을 보내는 사용자의 ID)
 		filePacket.append("#");
 		filePacket.append(file.getName());
 		filePacket.append("#");
 		filePacket.append(String.valueOf(fileLen));
+		filePacket.append("#");
+		
 	//	JOptionPane.showInputDialog("filePacket : " + filePacket.toString());
 	//	JOptionPane.showInputDialog("roomUserIPList: " + roomUserIPList);
 		 
@@ -413,8 +421,8 @@ public class NetworkLib extends Thread { // 받은패킷을 ArrayList에 저장한다!! 그
 	     //JOptionPane.showInputDialog("roomUserIPList.size() : " + roomUserIPList.size());
 	//   TalkWindow t = new TalkWindow(this,null);
 	//     for(int i=0;i<roomUserIPList.size();i+=1) {
-	 //   	 if(!idList.get(i).equals(loginWindow.loginID))
-	  //  	 {
+	//    	 if(!idList.get(i).equals(loginWindow.loginID))
+	   // 	 {
 	    //		 JOptionPane.showInputDialog("roomUserIP: " +roomUserIPList.get(i));
 	 //   		 JOptionPane.showInputDialog("idList id:"+idList.get(i));
 	  // 		 JOptionPane.showInputDialog("loginWindow id: " + loginWindow.loginID);

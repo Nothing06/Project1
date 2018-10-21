@@ -9,7 +9,6 @@ import java.util.ArrayList;
 
 import javax.swing.JTable;
 
-
 public class PersonTable{
 
 	public ArrayList<String[]> personTable =new ArrayList<String[]>();
@@ -51,7 +50,26 @@ public class PersonTable{
 			System.out.println("DB접속오류"+e);
 		}
 	}
-	public ArrayList<String> select(String sql) {
+	public String selectOne(String sql, String attributeName) {
+		String attributeValue="";
+		PreparedStatement pstm = null;
+		ResultSet rs=null;
+		try {
+			pstm = (PreparedStatement)con.prepareStatement(sql);
+			rs = pstm.executeQuery(sql);
+			
+			while(rs.next())
+			{
+				attributeValue = rs.getString("friendIDList");
+			}
+			
+		}
+		catch(SQLException e) {System.out.println();
+		e.printStackTrace();}
+		
+		return attributeValue;
+	}
+	public ArrayList<String> selectAll(String sql) {
 		ArrayList<String> attributeList = new ArrayList<String>();
 		PreparedStatement pstm = null;
 		ResultSet rs=null;
@@ -64,20 +82,26 @@ public class PersonTable{
 			
 			while(rs.next())
 			{
+				attributeList.add(rs.getString("id"));
+				attributeList.add(String.valueOf(rs.getInt("emp_no")));
+				attributeList.add(rs.getString("name"));
+				attributeList.add(String.valueOf(rs.getInt("age")));
+				attributeList.add(rs.getString("tel"));
+				attributeList.add(rs.getString("friendIDList"));
 				
-				if(columnIdx == 3 || columnIdx == 5) {
-					nData = rs.getInt(columnIdx);
-					System.out.print(nData + ", ");
-					//columnIdx+=1;
-					attributeList.add(String.valueOf(nData));
-				}
-				else	{
-					data = rs.getString(columnIdx);
-					System.out.print(data + ", ");
-					//columnIdx+=1;
-					attributeList.add(data);
-				}
-				columnIdx+=1;
+//				if(columnIdx == 3 || columnIdx == 5) {
+//					nData = rs.getInt(columnIdx);
+//					System.out.print(nData + ", ");
+//					//columnIdx+=1;
+//					attributeList.add(String.valueOf(nData));
+//				}
+//				else	{
+//					data = rs.getString(columnIdx);
+//					System.out.print(data + ", ");
+//					//columnIdx+=1;
+//					attributeList.add(data);
+//				}
+//				columnIdx+=1;
 			}
 			
 		}
